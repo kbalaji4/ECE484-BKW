@@ -73,11 +73,11 @@ def train():
     # TODO: Data preparation: Load and preprocess the training and validation datasets.
     # Hint: Use the LaneDataset class and PyTorch's DataLoader.
     ################################################################################
-    # train_dataset = ...
-    # train_loader = DataLoader(...)
+    train_dataset = LaneDataset(DATASET_PATH, mode="train")
+    train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, shuffle=True)
 
-    # val_dataset = ...
-    # val_loader = DataLoader(...)
+    val_dataset = LaneDataset(DATASET_PATH, mode="val")
+    val_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, shuffle=False)
     ################################################################################
 
     # Model and optimizer initialization
@@ -86,7 +86,7 @@ def train():
     
     # TODO: Initialize the Adam optimizer with appropriate learning rate and weight decay.
     ################################################################################
-    # optimizer = ...
+    optimizer = Adam(enet_model.parameters(), lr=LR, weight_decay=1e-4)
     
     ################################################################################
 
