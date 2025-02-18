@@ -28,7 +28,23 @@ def perspective_transform(image):
     """
     
     ####################### TODO: Your code starts Here #######################
-
+    height, width = image.shape[:2]
+    src_pts = np.float32([
+        [width * 0.45, height * 0.65], 
+        [width * 0.55, height * 0.65], 
+        [width * 0.15, height],      
+        [width * 0.85, height]         
+    ])
+    
+    dst_pts = np.float32([
+        [width * 0.2, 0],  
+        [width * 0.8, 0], 
+        [width * 0.2, height],  
+        [width * 0.8, height]  
+    ])
+    
+    M = cv2.getPerspectiveTransform(src_pts,dst_pts)
+    transformed_image = cv2.warpPerspective(image, M, (width, height))
     ####################### TODO: Your code ends Here #######################
     
     return transformed_image
@@ -48,7 +64,27 @@ def visualize_lanes_row(images, instances_maps, alpha=0.7):
     fig, axes = plt.subplots(1, num_images, figsize=(15, 5))
 
     ####################### TODO: Your code starts Here #######################
-    
+
+    image = cv2.resize(images[i], (512, 256))
+    instance_map = cv2.resize(instances_maps[i], (512, 256))
+        
+    if num_images == 1:
+        axes = [axes]  
+
+    for i in range(num_images):
+        image = images[i]
+        instance_map = instances_maps[i]
+        transformed_image = perspective_transform(image)
+        transformed_map = perspective_transform(instance_map)
+
+        if len(transformed_map.shape) == 2:
+           transformed_map = np.stack([transformed_map] * 3, axis=-1)
+
+        overlay = (transformed_map * np.array([0, 255, 0], dtype=np.uint8))  
+        blended = cv2.addWeighted(transformed_image, 1 - alpha, overlay, alpha, 0)
+
+        axes[i].imshow(blended)
+        axes[i].axis("off")
     ####################### TODO: Your code ends Here #######################
 
     plt.tight_layout()
