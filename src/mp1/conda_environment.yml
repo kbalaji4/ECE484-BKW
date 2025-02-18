@@ -1,0 +1,19 @@
+name: tusimple
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+  - nvidia
+dependencies:
+  - python=3.8
+  - pyqt
+  - pytorch=2.0.0
+  - torchvision=0.15.2
+  - opencv
+  - numpy
+  - matplotlib
+  - scikit-learn
+  - tqdm
+  - pip
+  - pip:
+    - wandb
