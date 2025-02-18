@@ -42,6 +42,7 @@ def validate(model, val_loader):
                 binary_label=binary_labels,
                 instance_label=instance_labels,
             )
+           
             loss = binary_loss + instance_loss
 
             val_loss += loss.item()
@@ -77,7 +78,7 @@ def train():
     train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, shuffle=True)
 
     val_dataset = LaneDataset(DATASET_PATH, mode="val")
-    val_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size = BATCH_SIZE, shuffle=False)
     ################################################################################
 
     # Model and optimizer initialization
@@ -89,7 +90,7 @@ def train():
     optimizer = Adam(enet_model.parameters(), lr=LR, weight_decay=1e-4)
     
     ################################################################################
-
+    
 
     def save_checkpoint(model, optimizer, epoch, checkpoint_dir):
         """
@@ -121,11 +122,18 @@ def train():
             # 3. Compute the binary and instance losses using `compute_loss`.
             # 4. Sum the losses (`loss = binary_loss + instance_loss`) for backpropagation.
             # 5. Zero out the optimizer gradients, backpropagate the loss, and take an optimizer step.
-
-
-
-
-
+            images, binary_labels, instance_labels = images.to(DEVICE), binary_labels.to(DEVICE), instance_labels.to(DEVICE)
+            binary_logits, instance_embeddings = enet_model(images)
+            binary_loss, instance_loss = compute_loss(
+                binary_output=binary_logits,
+                instance_output=instance_embeddings,
+                binary_label=binary_labels,
+                instance_label=instance_labels,
+            )
+            loss = binary_loss + instance_loss
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
             ################################################################################
             
             
@@ -162,7 +170,7 @@ def train():
         # Hint:
         # Call the `validate` function, passing the model and validation data loader.
         ################################################################################
-        # val_binary_loss, val_instance_loss, val_total_loss = ...
+        val_binary_loss, val_instance_loss, val_total_loss = validate(enet_model, val_loader)
         ################################################################################
         print(f"Validation Results - Epoch {epoch}: "
               f"Binary Loss = {val_binary_loss:.4f}, "
