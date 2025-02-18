@@ -13,8 +13,9 @@ from torch.optim import Adam
 # Configurations
 BATCH_SIZE = 8
 LR = 1e-4
-EPOCHS = 50
+EPOCHS = 5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f'device: {DEVICE}')
 DATASET_PATH =  "/opt/data/TUSimple"
 CHECKPOINT_DIR = "checkpoints"
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
@@ -134,6 +135,10 @@ def train():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+            #binary_losses.append(binary_loss.item())
+            #instance_losses.append(instance_loss.item())
+            #epoch_loss += loss.item()  
             ################################################################################
             
             

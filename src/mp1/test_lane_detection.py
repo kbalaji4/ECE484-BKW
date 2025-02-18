@@ -8,7 +8,7 @@ import os
 
 # Define dataset and checkpoint paths
 DATASET_PATH = "/opt/data/TUSimple/test_set"
-CHECKPOINT_PATH = "checkpoints/enet_checkpoint_epoch_best.pth"  # Path to the trained model checkpoint
+CHECKPOINT_PATH = "checkpoints/enet_checkpoint_epoch_5.pth"  # Path to the trained model checkpoint
 
 # Function to load the ENet model
 def load_enet_model(checkpoint_path, device="cuda"):
@@ -29,14 +29,14 @@ def perspective_transform(image):
     
     ####################### TODO: Your code starts Here #######################
     height, width = image.shape[:2]
-    src_pts = np.float32([
-        [width * 0.45, height * 0.65], 
-        [width * 0.55, height * 0.65], 
-        [width * 0.15, height],      
-        [width * 0.85, height]         
+    dst_pts = np.float32([
+        [0, 0], 
+        [width, 0], 
+        [0, height],      
+        [width, height]         
     ])
     
-    dst_pts = np.float32([
+    src_pts = np.float32([
         [width * 0.2, 0],  
         [width * 0.8, 0], 
         [width * 0.2, height],  
@@ -64,24 +64,28 @@ def visualize_lanes_row(images, instances_maps, alpha=0.7):
     fig, axes = plt.subplots(1, num_images, figsize=(15, 5))
 
     ####################### TODO: Your code starts Here #######################
-
-    image = cv2.resize(images[i], (512, 256))
-    instance_map = cv2.resize(instances_maps[i], (512, 256))
         
     if num_images == 1:
         axes = [axes]  
 
     for i in range(num_images):
-        image = images[i]
-        instance_map = instances_maps[i]
+        image = cv2.resize(images[i], (512, 256))
+        print(f'original image: {cv2.imshow("original image", image)}')
+        instance_map = cv2.resize(instances_maps[i], (512, 256))
         transformed_image = perspective_transform(image)
         transformed_map = perspective_transform(instance_map)
+        
+        transformed_image = transformed_image.astype(np.uint8)
+        transformed_map = transformed_map.astype(np.uint8)
 
         if len(transformed_map.shape) == 2:
-           transformed_map = np.stack([transformed_map] * 3, axis=-1)
+           transformed_map = cv2.cvtColor(transformed_map, cv2.COLOR_GRAY2BGR)
+        
 
-        overlay = (transformed_map * np.array([0, 255, 0], dtype=np.uint8))  
-        blended = cv2.addWeighted(transformed_image, 1 - alpha, overlay, alpha, 0)
+        overlayed = cv2.addWeighted(transformed_image, 1 - alpha, transformed_map, alpha, 0)
+
+        blended = cv2.cvtColor(overlayed, cv2.COLOR_BGR2RGB)
+
 
         axes[i].imshow(blended)
         axes[i].axis("off")
