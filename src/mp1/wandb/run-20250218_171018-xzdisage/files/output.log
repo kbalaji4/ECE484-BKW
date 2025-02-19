@@ -1,0 +1,19 @@
+Epoch 1/5:   0%|                                                                                                                                 | 0/402 [00:01<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 197, in <module>
+    train()
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 129, in train
+    binary_loss, instance_loss = compute_loss(
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/models/losses.py", line 69, in compute_loss
+    instance_loss = ds_loss(instance_output, instance_label)
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/models/losses.py", line 23, in forward
+    return self._discriminative_loss(input, target)
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/models/losses.py", line 28, in _discriminative_loss
+    dis_loss=torch.tensor(0.).to(self.device)
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/cuda/__init__.py", line 310, in _lazy_init
+    raise AssertionError("Torch not compiled with CUDA enabled")
+AssertionError: Torch not compiled with CUDA enabled

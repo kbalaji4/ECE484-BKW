@@ -1,0 +1,15 @@
+{"time":"2025-02-18T17:10:18.707624-06:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/wandb/run-20250218_171018-xzdisage/logs/debug-core.log"}
+{"time":"2025-02-18T17:10:18.8202-06:00","level":"INFO","msg":"created new stream","id":"xzdisage"}
+{"time":"2025-02-18T17:10:18.82027-06:00","level":"INFO","msg":"stream: started","id":"xzdisage"}
+{"time":"2025-02-18T17:10:18.820415-06:00","level":"INFO","msg":"handler: started","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:18.820617-06:00","level":"INFO","msg":"writer: Do: started","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:18.820637-06:00","level":"INFO","msg":"sender: started","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:19.207006-06:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-18T17:10:21.60694-06:00","level":"INFO","msg":"stream: closing","id":"xzdisage"}
+{"time":"2025-02-18T17:10:21.607124-06:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-18T17:10:21.607621-06:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-18T17:10:21.984395-06:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-18T17:10:22.088145-06:00","level":"INFO","msg":"writer: Close: closed","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:22.088677-06:00","level":"INFO","msg":"handler: closed","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:22.088696-06:00","level":"INFO","msg":"sender: closed","stream_id":"xzdisage"}
+{"time":"2025-02-18T17:10:22.089077-06:00","level":"INFO","msg":"stream: closed","id":"xzdisage"}

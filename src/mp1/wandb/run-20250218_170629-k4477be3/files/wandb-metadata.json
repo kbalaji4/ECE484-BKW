@@ -1,0 +1,44 @@
+{
+  "os": "macOS-15.0-arm64-arm-64bit",
+  "python": "CPython 3.10.1",
+  "startedAt": "2025-02-18T23:06:29.632677Z",
+  "program": "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py",
+  "codePath": "src/mp1/train.py",
+  "git": {
+    "remote": "https://github.com/kbalaji4/ECE484-BKW.git",
+    "commit": "772d02d54db399b7de55c75276aec9c2a81ea3f7"
+  },
+  "email": "keshavbalaji2397@gmail.com",
+  "root": "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1",
+  "host": "eduroamprvnat-172-16-37-229.near.illinois.edu",
+  "executable": "/Users/keshavbalaji/.pyenv/versions/3.10.1/bin/python3",
+  "codePathLocal": "train.py",
+  "cpu_count": 8,
+  "cpu_count_logical": 8,
+  "disk": {
+    "/": {
+      "total": "494384795648",
+      "used": "462891438080"
+    },
+    "/System/Volumes/Data": {
+      "total": "494384795648",
+      "used": "462891438080"
+    }
+  },
+  "memory": {
+    "total": "17179869184"
+  },
+  "cpu": {
+    "count": 8,
+    "countLogical": 8
+  },
+  "apple": {
+    "name": "Apple M1 Pro",
+    "ecpuCores": 2,
+    "pcpuCores": 6,
+    "gpuCores": 14,
+    "memoryGb": 16,
+    "swapTotalBytes": "3221225472",
+    "ramTotalBytes": "17179869184"
+  }
+}

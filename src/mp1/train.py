@@ -12,11 +12,12 @@ from torch.optim import Adam
 
 # Configurations
 BATCH_SIZE = 8
-LR = 1e-4
-EPOCHS = 5
+LR = 1e-3
+EPOCHS = 50
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#DEVICE = torch.device("cpu")
 print(f'device: {DEVICE}')
-DATASET_PATH =  "/opt/data/TUSimple"
+DATASET_PATH =  "/Users/keshavbalaji/Documents/TuSimple/TUSimple"
 CHECKPOINT_DIR = "checkpoints"
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
@@ -68,6 +69,7 @@ def train():
             "learning_rate": LR,
             "epochs": EPOCHS,
             "optimizer": "Adam",
+            "weight_decay": 1e-4,
             "model": "ENet"
         }
     )
@@ -106,6 +108,8 @@ def train():
         wandb.save(checkpoint_path)  # Save to W&B
         print(f"Checkpoint saved at {checkpoint_path}")
 
+    wandb.watch(enet_model, log="all")
+    
     # Training loop
     for epoch in range(1, EPOCHS + 1):
         enet_model.train()
@@ -136,9 +140,9 @@ def train():
             loss.backward()
             optimizer.step()
 
-            #binary_losses.append(binary_loss.item())
-            #instance_losses.append(instance_loss.item())
-            #epoch_loss += loss.item()  
+            binary_losses.append(binary_loss.item())
+            instance_losses.append(instance_loss.item())
+            epoch_loss += loss.item()  
             ################################################################################
             
             
@@ -157,6 +161,7 @@ def train():
         mean_binary_loss = np.mean(binary_losses)
         mean_instance_loss = np.mean(instance_losses)
         total_loss = epoch_loss / len(train_loader)
+       
 
         print(f"Epoch {epoch}/{EPOCHS}: "
               f"Binary Loss = {mean_binary_loss:.4f}, "
@@ -193,4 +198,7 @@ def train():
     wandb.finish()
 
 if __name__ == '__main__':
+    #print(torch.cuda.is_available())  # Should return True if CUDA is available
+    #print(torch.cuda.current_device())  # Check the current device index
+   # print(torch.cuda.get_device_name(0))
     train()

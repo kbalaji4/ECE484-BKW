@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 196, in <module>
+    train()
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 78, in train
+    train_dataset = LaneDataset(DATASET_PATH, mode="train")
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/datasets/lane_dataset.py", line 40, in __init__
+    self._process_label_file(label_file)
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/datasets/lane_dataset.py", line 77, in _process_label_file
+    with open(file_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: 'TuSimple/train_set/label_data_0313.json'
