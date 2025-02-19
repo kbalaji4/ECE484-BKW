@@ -8,7 +8,7 @@ import os
 
 # Define dataset and checkpoint paths
 DATASET_PATH = "/opt/data/TUSimple/test_set"
-CHECKPOINT_PATH = "checkpoints/enet_checkpoint_epoch_5.pth"  # Path to the trained model checkpoint
+CHECKPOINT_PATH = "checkpoints/enet_checkpoint_epoch_49.pth"  # Path to the trained model checkpoint
 
 # Function to load the ENet model
 def load_enet_model(checkpoint_path, device="cuda"):
@@ -70,21 +70,30 @@ def visualize_lanes_row(images, instances_maps, alpha=0.7):
 
     for i in range(num_images):
         image = cv2.resize(images[i], (512, 256))
-        print(f'original image: {cv2.imshow("original image", image)}')
+        # print(f'original image: {cv2.imshow("original image", image)}')
         instance_map = cv2.resize(instances_maps[i], (512, 256))
         transformed_image = perspective_transform(image)
         transformed_map = perspective_transform(instance_map)
-        
+        print(f'instance map: {cv2.imshow("instance map", instance_map)}')
+        print(f'transformed image: {cv2.imshow("transformed image", transformed_image)}')
+        print(f'transformed map: {cv2.imshow("transformed map", transformed_map), transformed_map.shape}')
         transformed_image = transformed_image.astype(np.uint8)
         transformed_map = transformed_map.astype(np.uint8)
 
+        """
+        transformed_map works but is grayscale. convert to color
+        """
         if len(transformed_map.shape) == 2:
            transformed_map = cv2.cvtColor(transformed_map, cv2.COLOR_GRAY2BGR)
         
+        print(f'transformed map: {cv2.imshow("transformed map", transformed_map), transformed_map.shape, np.unique(transformed_map, axis=0)}')
+        
 
-        overlayed = cv2.addWeighted(transformed_image, 1 - alpha, transformed_map, alpha, 0)
-
+        overlayed = cv2.addWeighted(transformed_image, 1 - alpha, transformed_map, alpha, 1)
+        print(f'overlayed: {cv2.imshow("overlayed", overlayed), overlayed.shape}')
         blended = cv2.cvtColor(overlayed, cv2.COLOR_BGR2RGB)
+        print(f'blended: {cv2.imshow("blended", blended), blended.shape}')
+
 
 
         axes[i].imshow(blended)
