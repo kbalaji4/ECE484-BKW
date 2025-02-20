@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/eval.py", line 96, in <module>
+    evaluate()
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/eval.py", line 38, in evaluate
+    checkpoint = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/serialization.py", line 1425, in load
+    with _open_file_like(f, "rb") as opened_file:
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/serialization.py", line 751, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/serialization.py", line 732, in __init__
+    super().__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: 'checkpoints/enet_checkpoint_epoch_15_Instance.pth'

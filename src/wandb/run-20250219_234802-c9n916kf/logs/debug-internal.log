@@ -1,0 +1,29 @@
+{"time":"2025-02-19T23:48:02.41924-06:00","level":"INFO","msg":"stream: starting","core version":"0.19.6","symlink path":"/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/wandb/run-20250219_234802-c9n916kf/logs/debug-core.log"}
+{"time":"2025-02-19T23:48:02.527672-06:00","level":"INFO","msg":"created new stream","id":"c9n916kf"}
+{"time":"2025-02-19T23:48:02.527728-06:00","level":"INFO","msg":"stream: started","id":"c9n916kf"}
+{"time":"2025-02-19T23:48:02.527744-06:00","level":"INFO","msg":"writer: Do: started","stream_id":"c9n916kf"}
+{"time":"2025-02-19T23:48:02.527764-06:00","level":"INFO","msg":"sender: started","stream_id":"c9n916kf"}
+{"time":"2025-02-19T23:48:02.527833-06:00","level":"INFO","msg":"handler: started","stream_id":"c9n916kf"}
+{"time":"2025-02-19T23:48:02.70314-06:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-02-20T01:00:35.889168-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:54496->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:01:50.856841-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:54546->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:05:35.87402-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:54656->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:06:50.863371-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:54684->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:19:35.827036-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:54984->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:33:36.079756-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:55336->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:40:05.830253-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:55500->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:45:05.855388-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:55624->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:46:20.956579-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:55657->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T01:49:05.844817-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:55730->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T02:00:35.885437-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:56005->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T02:10:36.510845-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:56327->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T02:11:51.399165-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:56361->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T02:24:36.044082-06:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/keshavb2829/lane-detection/c9n916kf/file_stream\": read tcp 10.194.124.43:56744->35.186.228.49:443: read: connection reset by peer"}
+{"time":"2025-02-20T02:32:05.587467-06:00","level":"INFO","msg":"stream: closing","id":"c9n916kf"}
+{"time":"2025-02-20T02:32:05.587743-06:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-02-20T02:32:05.588277-06:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-02-20T02:32:08.778355-06:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-02-20T02:32:08.879295-06:00","level":"INFO","msg":"writer: Close: closed","stream_id":"c9n916kf"}
+{"time":"2025-02-20T02:32:08.879306-06:00","level":"INFO","msg":"sender: closed","stream_id":"c9n916kf"}
+{"time":"2025-02-20T02:32:08.880424-06:00","level":"INFO","msg":"handler: closed","stream_id":"c9n916kf"}
+{"time":"2025-02-20T02:32:08.881529-06:00","level":"INFO","msg":"stream: closed","id":"c9n916kf"}

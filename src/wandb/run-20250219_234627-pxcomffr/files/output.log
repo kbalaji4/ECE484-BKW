@@ -1,0 +1,15 @@
+Epoch 1/50:   8%|████████▌                                                                                            | 34/402 [00:54<09:52,  1.61s/it]
+Traceback (most recent call last):
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 204, in <module>
+    train()
+  File "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/train.py", line 140, in train
+    loss.backward()
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+  File "/Users/keshavbalaji/.pyenv/versions/3.10.1/lib/python3.10/site-packages/wandb/integration/torch/wandb_torch.py", line 276, in <lambda>
+    handle = var.register_hook(lambda grad: _callback(grad, log_track))
+KeyboardInterrupt

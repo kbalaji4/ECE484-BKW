@@ -135,7 +135,7 @@ def train():
                 binary_label=binary_labels,
                 instance_label=instance_labels,
             )
-            loss = binary_loss + instance_loss
+            loss = binary_loss + instance_loss*0.01
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

@@ -1,0 +1,16 @@
+{
+  "os": "macOS-15.0-arm64-arm-64bit",
+  "python": "CPython 3.10.1",
+  "startedAt": "2025-02-20T08:34:08.458542Z",
+  "program": "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src/mp1/eval.py",
+  "codePath": "src/mp1/eval.py",
+  "git": {
+    "remote": "https://github.com/kbalaji4/ECE484-BKW.git",
+    "commit": "8bb28a42727ca7a68ac9a6162907e4dad7c3740a"
+  },
+  "email": "keshavbalaji2397@gmail.com",
+  "root": "/Users/keshavbalaji/Desktop/ECE484-BKW/mp-release-sp25/src",
+  "host": "wirelessprv-10-194-124-43.near.illinois.edu",
+  "executable": "/Users/keshavbalaji/.pyenv/versions/3.10.1/bin/python",
+  "codePathLocal": "mp1/eval.py"
+}
