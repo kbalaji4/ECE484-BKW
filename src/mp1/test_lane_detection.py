@@ -30,19 +30,20 @@ def perspective_transform(image):
     ####################### TODO: Your code starts Here #######################
     height, width = image.shape[:2]
 
-    # bottom left, top left, top right, bottom right
-    src_pts = np.float32([
-        [0, height],  
-        [width * 0.3, 0], 
-        [width * 0.7, 0], 
-        [width, height]  
-    ])
-
+    # top left, bottom left, bottom right, top right
     dst_pts = np.float32([
-        [0, height],
         [0, 0], 
-        [width, 0], 
-        [width, height]      
+        [0, height], 
+        [width, height],      
+        [width, 0]         
+    ])
+    # width, height
+    ## 67,716,506,350,788,355,1202,716
+    src_pts = np.float32([
+        [(450./1280) * width, (350./720) * height],  
+        [(67./1280) * width, (716./720) * height], 
+        [(1202./1280) * width, (716./720) * height],  
+        [(850./1280) * width, (355./720) * height]  
     ])
     
     M = cv2.getPerspectiveTransform(src_pts,dst_pts)
@@ -51,6 +52,21 @@ def perspective_transform(image):
     
     return transformed_image
 
+# def perspective_transform_squash(image):
+#     height, width = image.shape[:2]
+#     dst_pts = np.float32([
+#         [0, 0], 
+#         [width, 0], 
+#         [0, height],      
+#         [width, height]         
+#     ])
+    
+#     src_pts = np.float32([
+#         [width * 0.2, 0],  
+#         [width * 0.8, 0], 
+#         [width * 0.2, height],  
+#         [width * 0.8, height]  
+#     ])
 
 # Function to visualize lane predictions for multiple images in a single row
 def visualize_lanes_row(images, instances_maps, alpha=0.7):
@@ -63,7 +79,7 @@ def visualize_lanes_row(images, instances_maps, alpha=0.7):
     """
     
     num_images = len(images)
-    fig, axes = plt.subplots(1, num_images, figsize=(15, 5))
+    fig, axes = plt.subplots(2, num_images, figsize=(15, 5))
 
     ####################### TODO: Your code starts Here #######################
         
@@ -74,45 +90,50 @@ def visualize_lanes_row(images, instances_maps, alpha=0.7):
         image = cv2.resize(images[i], (512, 256))
         print(f'original image: {cv2.imshow("original image", image)}')
         instance_map = cv2.resize(instances_maps[i], (512, 256))
-        transformed_image = perspective_transform(image)
-        transformed_map = perspective_transform(instance_map)
 
         # normalize
         # print(f'straight up max of image: {np.max(np.squeeze(transformed_map))}')
-        transformed_map /= np.max(np.squeeze(transformed_map))
+        normalized_map = instance_map
+        normalized_map /= np.max(np.squeeze(instance_map))
         # print(f'transformed map values after division: {np.unique(transformed_map), transformed_map.shape}')
-        transformed_map *= 255.0
+        normalized_map *= 255.0
         print(f'instance map: {cv2.imshow("instance map", instance_map)}')
-        print(f'transformed image: {cv2.imshow("transformed image", transformed_image)}')
-        print(f'transformed map: {cv2.imshow("transformed map", transformed_map), transformed_map.shape}')
-        print(f'transformed map values: {np.unique(transformed_map), transformed_map.shape}')
-        transformed_image = transformed_image.astype(np.uint8)
-        transformed_map = transformed_map.astype(np.uint8)
+        print(f'normalized image: {cv2.imshow("normalized image", normalized_map)}')
+        image = image.astype(np.uint8)
+        normalized_map = normalized_map.astype(np.uint8)
 
         """
         transformed_map works but is grayscale. convert to color
         """
-        if len(transformed_map.shape) == 2:
-           transformed_map = cv2.cvtColor(transformed_map, cv2.COLOR_GRAY2BGR)
+        if len(normalized_map.shape) == 2:
+           normalized_map = cv2.cvtColor(normalized_map, cv2.COLOR_GRAY2BGR)
         
-        colored_map = cv2.applyColorMap(transformed_map, cv2.COLORMAP_JET)
+        colored_map = cv2.applyColorMap(normalized_map, cv2.COLORMAP_JET)
         # jet is full rainbow
         
         print(f'colored map: {cv2.imshow("colored map", colored_map), colored_map.shape, colored_map}')
         
-        overlayed = cv2.addWeighted(transformed_image, 1 - alpha, colored_map, alpha, 1)
+        overlayed = cv2.addWeighted(image, 1 - alpha, colored_map, alpha, 1)
         print(f'overlayed: {cv2.imshow("overlayed", overlayed), overlayed.shape}')
         blended = cv2.cvtColor(overlayed, cv2.COLOR_BGR2RGB)
         print(f'blended: {cv2.imshow("blended", blended), blended.shape}')
 
-        axes[i].imshow(blended)
-        axes[i].axis("off")
+        transformed_image = perspective_transform(blended)
+        # transformed_map = perspective_transform(instance_map)
+        print(f'transformed image: {cv2.imshow("transformed", transformed_image), transformed_image.shape}')
+        axes[0,i].imshow(blended)
+        # axes[1,i].imshow(overlayed)
+        axes[0,i].axis("off")
+        axes[1,i].imshow(transformed_image)
+        axes[1,i].axis("off")
     ####################### TODO: Your code ends Here #######################
 
     plt.tight_layout()
     plt.show()
 
 def main():
+    torch.cuda.empty_cache()
+    torch.no_grad()
     # Initialize device and model
     device = "cuda" if torch.cuda.is_available() else "cpu"
     enet_model = load_enet_model(CHECKPOINT_PATH, device)

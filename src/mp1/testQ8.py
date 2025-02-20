@@ -35,18 +35,21 @@ def perspective_transform(image):
     
     ####################### TODO: Your code starts Here #######################
     height, width = image.shape[:2]
+    
+    # top left, bottom left, bottom right, top right
     dst_pts = np.float32([
         [0, 0], 
-        [width, 0], 
-        [0, height],      
-        [width, height]         
+        [0, height], 
+        [width, height],      
+        [width, 0]         
     ])
-    
+    # width, height
+    ## 67,716,506,350,788,355,1202,716
     src_pts = np.float32([
-        [width * 0.2, 0],  
-        [width * 0.8, 0], 
-        [width * 0.2, height],  
-        [width * 0.8, height]  
+        [(506./1280) * width, (350./720) * height],  
+        [(67./1280) * width, (716./720) * height], 
+        [(1202./1280) * width, (716./720) * height],  
+        [(788./1280) * width, (355./720) * height]  
     ])
     
     M = cv2.getPerspectiveTransform(src_pts,dst_pts)
