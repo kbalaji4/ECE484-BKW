@@ -13,11 +13,14 @@ from torch.optim import Adam
 # Configurations
 BATCH_SIZE = 8
 LR = 1e-3
-EPOCHS = 50
+EPOCHS = 10
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+BINARY_LOSS_WEIGHT = 0.25
+INSTANCE_LOSS_WEIGHT = 1.0
 #DEVICE = torch.device("cpu")
 print(f'device: {DEVICE}')
-DATASET_PATH =  "/Users/keshavbalaji/Documents/TuSimple/TUSimple"
+# DATASET_PATH =  "/Users/keshavbalaji/Documents/TuSimple/TUSimple"
+DATASET_PATH =  "/opt/data/TUSimple"
 CHECKPOINT_DIR = "checkpoints"
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
@@ -135,7 +138,8 @@ def train():
                 binary_label=binary_labels,
                 instance_label=instance_labels,
             )
-            loss = binary_loss + instance_loss
+            # scale losses down. this way they're reported correctly
+            loss = (BINARY_LOSS_WEIGHT * binary_loss) + (INSTANCE_LOSS_WEIGHT* instance_loss)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
