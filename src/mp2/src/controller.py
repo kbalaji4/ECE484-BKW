@@ -44,20 +44,53 @@ class vehicleController():
         vel = currentPose.twist.linear # vector?
         yaw = quaternion_to_euler(currentPose.pose.orientation.x, currentPose.pose.orientation.y, currentPose.pose.orientation.z, currentPose.pose.orientation.w)[2]
         # the helper just gets it for you lol
-        # print("x, y, vel, yaw: ", pos_x, pos_y, vel, yaw)
+        vel_scalar = np.sqrt(vel.x**2 + vel.y**2)
+        # print("vel: ", vel, vel_scalar)
+        # print("pos: ", pos_x, pos_y)
+        # print("yaw: ", yaw)
+        # so we return xy position, scalar velocity, and like orientation
 
         ####################### TODO: Your Task 1 code ends Here #######################
 
-        return pos_x, pos_y, vel, yaw # note that yaw is in radian
+        return pos_x, pos_y, vel_scalar, yaw # note that yaw is in radian
 
     # Task 2: Longtitudal Controller
     # Based on all unreached waypoints, and your current vehicle state, decide your velocity
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
 
         ####################### TODO: Your TASK 2 code starts Here #######################
-        target_velocity = 10
+        straight_target_velocity = 12
+        curve_target_velocity = 8
 
+        target_velocity = 8
 
+        # arbitrarily pick 10 waypoints ahead. if x is straight or y is straight, try to reach straight_target_velocity.
+        # ig if turn then both are curving lol
+
+        num_waypoints_ahead = 10
+        """
+        angle threshold: if angle between two waypoints is greater than this, then start turning
+        """
+        angle_threshold = 0.5 # 0.5 rad = 28.6479 degrees
+
+        # not many
+        if len(future_unreached_waypoints) < num_waypoints_ahead:
+            num_waypoints_ahead = len(future_unreached_waypoints)
+        
+        angles = []
+        for i in range(num_waypoints_ahead - 1):
+            x1, y1 = future_unreached_waypoints[i]
+            x2, y2 = future_unreached_waypoints[i + 1]
+            angle = math.atan2(y2 - y1, x2 - x1)
+            angles.append(angle)
+        
+        angle_differences = [abs(angles[i+1] - angles[i]) for i in range(len(angles) - 1)]
+        
+        # is path straight or curved. adjust velocity otherwise
+        if all(difference < math.radians(angle_threshold) for difference in angle_differences):
+            target_velocity = straight_target_velocity
+        else:
+            target_velocity = curve_target_velocity
         ####################### TODO: Your TASK 2 code ends Here #######################
         return target_velocity
 
@@ -65,11 +98,24 @@ class vehicleController():
     # Task 3: Lateral Controller (Pure Pursuit)
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
 
-        ####################### TODO: Your TASK 3 code starts Here #######################
-        target_steering = 0
+        L = self.L  # Wheelbase
+        lookahead_distance = 10  
 
-        ####################### TODO: Your TASK 3 code starts Here #######################
-        return target_steering
+        # Calculate the lookahead point
+        target_x, target_y = target_point
+
+        # Calculate the angle to the target point
+        dx = target_x - curr_x
+        dy = target_y - curr_y
+        alpha = math.atan2(dy, dx) - curr_yaw
+
+        # Normalize alpha to be within the range [-pi, pi]
+        alpha = (alpha + math.pi) % (2 * math.pi) - math.pi
+
+        # Calculate the steering angle using the Pure Pursuit formula
+        delta = math.atan2(2 * L * math.sin(alpha), lookahead_distance)
+
+        return delta
 
 
     def execute(self, currentPose, target_point, future_unreached_waypoints):
