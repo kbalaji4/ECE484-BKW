@@ -40,7 +40,11 @@ class vehicleController():
     def extract_vehicle_info(self, currentPose):
 
         ####################### TODO: Your TASK 1 code starts Here #######################
-        pos_x, pos_y, vel, yaw = 0, 0, 0, 0
+        pos_x, pos_y= currentPose.pose.position.x, currentPose.pose.position.y
+        vel = currentPose.twist.linear # vector?
+        yaw = quaternion_to_euler(currentPose.pose.orientation.x, currentPose.pose.orientation.y, currentPose.pose.orientation.z, currentPose.pose.orientation.w)[2]
+        # the helper just gets it for you lol
+        # print("x, y, vel, yaw: ", pos_x, pos_y, vel, yaw)
 
         ####################### TODO: Your Task 1 code ends Here #######################
 
