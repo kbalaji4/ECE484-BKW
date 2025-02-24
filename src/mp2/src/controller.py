@@ -15,7 +15,8 @@ class vehicleController():
         self.controlPub = rospy.Publisher("/ackermann_cmd", AckermannDrive, queue_size = 1)
         self.prev_vel = 0
         self.L = 1.75 # Wheelbase, can be get from gem_control.py
-        self.log_acceleration = False
+        self.log_acceleration = True
+        self.acceleration = []
 
     def getModelState(self):
         # Get the current state of the vehicle
@@ -40,7 +41,7 @@ class vehicleController():
     def extract_vehicle_info(self, currentPose):
 
         ####################### TODO: Your TASK 1 code starts Here #######################
-        pos_x, pos_y= currentPose.pose.position.x, currentPose.pose.position.y
+        pos_x, pos_y = currentPose.pose.position.x, currentPose.pose.position.y
         vel = currentPose.twist.linear # vector?
         yaw = quaternion_to_euler(currentPose.pose.orientation.x, currentPose.pose.orientation.y, currentPose.pose.orientation.z, currentPose.pose.orientation.w)[2]
         # the helper just gets it for you lol
@@ -59,15 +60,16 @@ class vehicleController():
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
 
         ####################### TODO: Your TASK 2 code starts Here #######################
-        straight_target_velocity = 12
-        curve_target_velocity = 8
+        straight_target_velocity = 20
+        curve_target_velocity = 15
 
-        target_velocity = 8
+        target_velocity = 0
 
         # arbitrarily pick 10 waypoints ahead. if x is straight or y is straight, try to reach straight_target_velocity.
         # ig if turn then both are curving lol
 
-        num_waypoints_ahead = 10
+        num_waypoints_ahead = 15
+        num_turn_points_ahead = 3
         """
         angle threshold: if angle between two waypoints is greater than this, then start turning
         """
@@ -86,7 +88,16 @@ class vehicleController():
         
         angle_differences = [abs(angles[i+1] - angles[i]) for i in range(len(angles) - 1)]
         
-        # is path straight or curved. adjust velocity otherwise
+        # is path straight or curved. adjust velocity otherwise. enough points need to turn in order to turn
+        # num_curved = 0
+        # for difference in angle_differences:
+        #     if difference > math.radians(angle_threshold):
+        #         num_curved += 1
+        # if num_curved < num_turn_points_ahead:
+        #     target_velocity = straight_target_velocity
+        # else:
+        #     target_velocity = curve_target_velocity
+        
         if all(difference < math.radians(angle_threshold) for difference in angle_differences):
             target_velocity = straight_target_velocity
         else:
@@ -99,10 +110,18 @@ class vehicleController():
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
 
         L = self.L  # Wheelbase
-        lookahead_distance = 10  
+        lookahead_distance = 13  # double distance = half the angle
+        num_waypoints_to_lookahead = 2
 
-        # Calculate the lookahead point
+        # Calculate the lookahead point, just pick one a few ahead? or pick 1
         target_x, target_y = target_point
+        # tried to average the target point. didn't work. cuz averages don't work with turns
+        # num_waypoints = min(num_waypoints_to_lookahead, len(future_unreached_waypoints))
+        # for i in range(num_waypoints):
+        #     target_x += future_unreached_waypoints[i][0]
+        #     target_y += future_unreached_waypoints[i][1]
+        # target_x /= (num_waypoints + 1)
+        # target_y /= (num_waypoints + 1)
 
         # Calculate the angle to the target point
         dx = target_x - curr_x
@@ -112,9 +131,8 @@ class vehicleController():
         # Normalize alpha to be within the range [-pi, pi]
         alpha = (alpha + math.pi) % (2 * math.pi) - math.pi
 
-        # Calculate the steering angle using the Pure Pursuit formula
+        # steering angle using pure pursuit
         delta = math.atan2(2 * L * math.sin(alpha), lookahead_distance)
-
         return delta
 
 
@@ -131,8 +149,11 @@ class vehicleController():
 
         # Acceleration Profile
         if self.log_acceleration:
+            acceleration = (curr_vel- self.prev_vel) # apparently ours is not. 
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
-
+            # print(curr_x, curr_y, curr_vel, curr_yaw)
+            self.acceleration.append(acceleration)
+            self.prev_vel = curr_vel # oh update
 
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)

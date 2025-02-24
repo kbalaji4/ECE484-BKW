@@ -7,6 +7,7 @@ from controller import vehicleController
 import time
 from waypoint_list import WayPoints
 from util import euler_to_quaternion, quaternion_to_euler
+import matplotlib.pyplot as plt
 
 def run_model():
     rospy.init_node("model_dynamics")
@@ -29,6 +30,11 @@ def run_model():
     rospy.sleep(0.0)
     start_time = rospy.Time.now()
     prev_wp_time = start_time
+
+    # x = [row[0] for row in pos_list]
+    # y = [row[1] for row in pos_list]
+    # plt.scatter(x, y)
+    # plt.show()
 
     while not rospy.is_shutdown():
         rate.sleep()  # Wait a while before trying to get a new state
@@ -57,6 +63,8 @@ def run_model():
                 print("Reached all the waypoints")
                 total_time = (cur_time - start_time).to_sec()
                 print(total_time)
+                plt.plot(controller.acceleration)
+                plt.show()
                 return True, pos_idx, total_time
 
             target_x, target_y = pos_list[pos_idx]
@@ -66,7 +74,6 @@ def run_model():
             print(f"Time Taken: {round(time_taken, 2)}", "reached",pos_list[prev_pos_idx][0],pos_list[prev_pos_idx][1],"next",pos_list[pos_idx][0],pos_list[pos_idx][1])
 
         controller.execute(currState, [target_x, target_y], pos_list[pos_idx:])
-
 if __name__ == "__main__":
     try:
         status, num_waypoints, time_taken = run_model()
