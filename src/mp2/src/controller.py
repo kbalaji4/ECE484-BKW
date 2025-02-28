@@ -127,28 +127,6 @@ class vehicleController():
         alpha = math.atan2(dy, dx) - curr_yaw
         delta = math.atan2(2 * self.L * math.sin(alpha), ld)
         return delta
-    
-    def pure_pursuit_lateral_controller_OG(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
-
-        L = self.L  # Wheelbase
-        lookahead_distance = 10  
-
-        # Calculate the lookahead point
-        target_x, target_y = target_point
-
-        # Calculate the angle to the target point
-        dx = target_x - curr_x
-        dy = target_y - curr_y
-        alpha = math.atan2(dy, dx) - curr_yaw
-
-        # Normalize alpha to be within the range [-pi, pi]
-        alpha = (alpha + math.pi) % (2 * math.pi) - math.pi
-
-        # Calculate the steering angle using the Pure Pursuit formula
-        delta = math.atan2(2 * L * math.sin(alpha), lookahead_distance)
-
-        return delta
-
 
     def execute(self, currentPose, target_point, future_unreached_waypoints, position_list, velocity_list, acceleration_list):
         # Compute the control input to the vehicle according to the
@@ -188,3 +166,18 @@ class vehicleController():
         newAckermannCmd = AckermannDrive()
         newAckermannCmd.speed = 0
         self.controlPub.publish(newAckermannCmd)
+
+def pure_pursuit_lateral_controller_Old_version(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
+
+        L = self.L  # Wheelbase
+        lookahead_distance = 10  
+
+        # lookahead
+        target_x, target_y = target_point
+        dx = target_x - curr_x # angle
+        dy = target_y - curr_y
+        alpha = math.atan2(dy, dx) - curr_yaw
+
+        alpha = (alpha + math.pi) % (2 * math.pi) - math.pi
+        delta = math.atan2(2 * L * math.sin(alpha), lookahead_distance)
+        return delta
