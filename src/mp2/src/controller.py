@@ -15,7 +15,10 @@ class vehicleController():
         self.controlPub = rospy.Publisher("/ackermann_cmd", AckermannDrive, queue_size = 1)
         self.prev_vel = 0
         self.L = 1.75 # Wheelbase, can be get from gem_control.py
-        self.log_acceleration = False
+        self.log_acceleration = True
+        self.acceleration = []
+        self.position = []
+        self.velocity = []
 
     def getModelState(self):
         # Get the current state of the vehicle
@@ -59,15 +62,15 @@ class vehicleController():
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
 
         ####################### TODO: Your TASK 2 code starts Here #######################
-        straight_target_velocity = 12
-        curve_target_velocity = 8
+        straight_target_velocity = 20
+        curve_target_velocity = 18
 
-        target_velocity = 8
+        target_velocity = 0
 
         # arbitrarily pick 10 waypoints ahead. if x is straight or y is straight, try to reach straight_target_velocity.
         # ig if turn then both are curving lol
 
-        num_waypoints_ahead = 10
+        num_waypoints_ahead = 5
         """
         angle threshold: if angle between two waypoints is greater than this, then start turning
         """
@@ -98,6 +101,35 @@ class vehicleController():
     # Task 3: Lateral Controller (Pure Pursuit)
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
 
+        k = 0.5
+        min_look = 1.5
+        
+        state = self.getModelState()
+        if state is None:
+            return 0.0
+
+        v_x = state.twist.linear.x
+        v_y = state.twist.linear.y
+        speed = math.sqrt(v_x ** 2 + v_y ** 2)
+        l_d = min_look + k * speed
+        lookahead_point = None
+        for waypoint in future_unreached_waypoints:
+            dist = math.sqrt((waypoint[0] - curr_x) ** 2 + (waypoint[1] - curr_y) ** 2)
+            if dist >= l_d:
+                lookahead_point = waypoint
+                break
+        if lookahead_point is None:
+            lookahead_point = future_unreached_waypoints[-1]
+            
+        dx = lookahead_point[0] - curr_x
+        dy = lookahead_point[1] - curr_y
+        ld = math.sqrt(dx ** 2 + dy ** 2)
+        alpha = math.atan2(dy, dx) - curr_yaw
+        delta = math.atan2(2 * self.L * math.sin(alpha), ld)
+        return delta
+    
+    def pure_pursuit_lateral_controller_OG(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
+
         L = self.L  # Wheelbase
         lookahead_distance = 10  
 
@@ -118,7 +150,7 @@ class vehicleController():
         return delta
 
 
-    def execute(self, currentPose, target_point, future_unreached_waypoints):
+    def execute(self, currentPose, target_point, future_unreached_waypoints, position_list, velocity_list, acceleration_list):
         # Compute the control input to the vehicle according to the
         # current and reference pose of the vehicle
         # Input:
@@ -131,8 +163,13 @@ class vehicleController():
 
         # Acceleration Profile
         if self.log_acceleration:
+            acceleration = (curr_vel- self.prev_vel) # apparently ours is not. 
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
-
+            # print(curr_x, curr_y, curr_vel, curr_yaw)
+            self.acceleration.append(acceleration)
+            self.prev_vel = curr_vel # oh update
+        self.velocity.append(curr_vel)
+        self.position.append([curr_x, curr_y])
 
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)

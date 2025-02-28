@@ -7,6 +7,9 @@ from controller import vehicleController
 import time
 from waypoint_list import WayPoints
 from util import euler_to_quaternion, quaternion_to_euler
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def run_model():
     rospy.init_node("model_dynamics")
@@ -20,6 +23,41 @@ def run_model():
 
     def shutdown():
         """Stop the car when this ROS node shuts down"""
+        # pos
+        pos_array = np.array(controller.position) # can slice
+        waypoint_array = np.array(pos_list)
+        plt.figure()
+        plt.plot(pos_array[:,0], pos_array[:,1], 'ro', label='Position')
+        plt.plot(waypoint_array[:,0], waypoint_array[:,1], 'bo', label='Waypoints')
+        plt.scatter(0, -98, color='green', s=100, label='initial position')  
+        plt.xlabel('X Position')
+        plt.ylabel('Y Position')
+        plt.title('Vehicle Position, Waypoints')
+        plt.legend()
+        plt.savefig('position_plot.pdf')
+        plt.close()
+
+        # vel
+        time_list = np.linspace(0, len(controller.velocity) / 100, len(controller.velocity))  # Assuming 100 Hz rate
+        plt.figure()
+        plt.plot(time_list, controller.velocity, label='Velocity')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Velocity (m/s)')
+        plt.title('Velocity over Time')
+        plt.legend()
+        plt.savefig('velocity_plot.pdf')
+        plt.close()
+
+        # accel
+        plt.figure()
+        plt.plot(time_list, controller.acceleration, label='Acceleration', color='red')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Acceleration (m/s^2)')
+        plt.title('Acceleration over Time')
+        plt.legend()
+        plt.savefig('acceleration_plot.pdf')
+        plt.close()
+
         controller.stop()
         rospy.loginfo("Stop the car")
 
@@ -29,6 +67,7 @@ def run_model():
     rospy.sleep(0.0)
     start_time = rospy.Time.now()
     prev_wp_time = start_time
+    
 
     while not rospy.is_shutdown():
         rate.sleep()  # Wait a while before trying to get a new state
@@ -65,7 +104,7 @@ def run_model():
             prev_wp_time = cur_time
             print(f"Time Taken: {round(time_taken, 2)}", "reached",pos_list[prev_pos_idx][0],pos_list[prev_pos_idx][1],"next",pos_list[pos_idx][0],pos_list[pos_idx][1])
 
-        controller.execute(currState, [target_x, target_y], pos_list[pos_idx:])
+        controller.execute(currState, [target_x, target_y], pos_list[pos_idx:], controller.position, controller.velocity, controller.acceleration)
 
 if __name__ == "__main__":
     try:
