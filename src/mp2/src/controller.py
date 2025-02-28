@@ -128,7 +128,7 @@ class vehicleController():
         delta = math.atan2(2 * self.L * math.sin(alpha), ld)
         return delta
 
-    def execute(self, currentPose, target_point, future_unreached_waypoints, position_list, velocity_list, acceleration_list):
+    def execute(self, currentPose, target_point, future_unreached_waypoints):
         # Compute the control input to the vehicle according to the
         # current and reference pose of the vehicle
         # Input:
@@ -139,7 +139,7 @@ class vehicleController():
 
         curr_x, curr_y, curr_vel, curr_yaw = self.extract_vehicle_info(currentPose)
 
-        # Acceleration Profile
+        # Acceleration Profile, modified execute and main as well 
         if self.log_acceleration:
             acceleration = (curr_vel- self.prev_vel) # apparently ours is not. 
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
