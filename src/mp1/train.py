@@ -13,10 +13,11 @@ from torch.optim import Adam
 # Configurations
 BATCH_SIZE = 8
 LR = 1e-3
-EPOCHS = 10
+EPOCHS = 15
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-BINARY_LOSS_WEIGHT = 0.25
-INSTANCE_LOSS_WEIGHT = 1.0
+BINARY_LOSS_WEIGHT = 0.3
+INSTANCE_LOSS_WEIGHT = 0.7
+EMBEDDING_DIM = 8
 #DEVICE = torch.device("cpu")
 print(f'device: {DEVICE}')
 # DATASET_PATH =  "/Users/keshavbalaji/Documents/TuSimple/TUSimple"
@@ -88,7 +89,7 @@ def train():
     ################################################################################
 
     # Model and optimizer initialization
-    enet_model = ENet(binary_seg=2, embedding_dim=4).to(DEVICE)
+    enet_model = ENet(binary_seg=2, embedding_dim=EMBEDDING_DIM).to(DEVICE)
     
     
     # TODO: Initialize the Adam optimizer with appropriate learning rate and weight decay.
