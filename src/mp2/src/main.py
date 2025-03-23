@@ -19,7 +19,10 @@ def run_model():
 
     target_x, target_y = pos_list[pos_idx]
 
-    def shutdown():
+    def shutdown():    # x = [row[0] for row in pos_list]
+    # y = [row[1] for row in pos_list]
+    # plt.scatter(x, y)
+    # plt.show()
         """Stop the car when this ROS node shuts down"""
         controller.stop()
         rospy.loginfo("Stop the car")
