@@ -8,6 +8,8 @@ import shutil
 from std_msgs.msg import Float32MultiArray
 from scipy.integrate import ode
 
+import time # debugging
+
 import random
 
 def vehicle_dynamics(t, vars, vr, delta):
@@ -96,7 +98,6 @@ class particleFilter:
 
         ## TODO #####
 
-
         ###############
         # pass
 
@@ -108,6 +109,17 @@ class particleFilter:
         particles_new = list()
 
         ## TODO #####
+        """ 
+        u can construct particles with Particle(...noisy=True)
+        recommended to use multinomial resampling for this method
+
+        1. Calculate an array of the cumulative sum of the weights.
+        2. Randomly generate a number and determine which range in that cumulative weight array to which
+        the number belongs.        ## TODO: Add 4 additional sensor directions #####
+
+        3. The index of that range would correspond to the particle that should be created.
+        4. Repeat sampling until you have the desired number of samples.
+        """
         
 
         ###############
@@ -121,6 +133,7 @@ class particleFilter:
             You can either use ode function or vehicle_dynamics function provided above
         """
         ## TODO #####
+        # vehicle_dynamics(t, vars, vr, delta)
         
 
         ###############
@@ -132,8 +145,52 @@ class particleFilter:
         Description:
             Run PF localization
         """
+        print(f'num_particles {self.num_particles}')
+        print(f'sensor_limit {self.sensor_limit}')
+        print(f'initial particles: {len(self.particles)}')
+        print(f'x start: {self.x_start}') # gazebo or python?
+        print(f'y start: {self.y_start}')
+        print(f'bob: {self.bob}')
+        # print(f'world: {self.world}')
+        print(f'initial model state: {self.getModelState()}')
         count = 0 
         while True:
             ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
-            
-            ###############
+            # modelState = self.GetModelState() # how do u get current particles?
+
+            # sample motion model (p) which are teh particles representing the current distribution
+            """ 
+            self.controlSub = rospy.Subscriber("/gem/control", Float32MultiArray, self.__controlHandler, queue_size = 1)
+            self.control = []                   # A list of control signal from the vehicle
+
+            time step is 0.01s. control is an append only log of the actual v, delta control signals
+            vehicle dynamics can take these v, delta as inputs and output x, y, theta (orientation)
+
+             You should perform integra-
+        tion through the whole list of control input stored in self.control with time step 0.01. Since the vehicle
+        control frequency is higher than the particle update frequency, a list of vehicle control inputs will be stored.
+        Therefore, if you only use the most recent control input, your particle motion will be wrong. By doing this,
+        you can properly predict the new location of the particle.
+            """
+            # print(f'count: {count}')
+            # print(f'model state: {self.getModelState()}')
+            # print(f'control: {len(self.control)}')
+            # count += 1
+            # time.sleep(1)
+            # current_state = []
+            # vehicle_dynamics(t, vars, vr, delta):
+            #     curr_x = vars[0]
+            #     curr_y = vars[1] 
+            #     curr_theta = vars[2]
+                
+            #     dx = vr * np.cos(curr_theta)
+            #     dy = vr * np.sin(curr_theta)
+            #     dtheta = delta
+            #     return [dx,dy,dtheta]
+
+            # reading = vehicl_read_sensor() # this might be model state
+            # self.updateWeight(readings_robot) # updateWeight(p, reading) 
+
+            # self.resampleParticle() # p = resampleParticle(p)
+               
+                ###############
