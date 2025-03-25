@@ -422,7 +422,12 @@ class Robot(Particle):
         # If the lidar measurements are missing with 0.5 probability.
         if self.measurement_noise and np.random.random() < 0.5:
             readings_tmp = None
-
+        
+        """
+        returns same order as lidarProcessing processLidar()
+        [front right rear left],
+        [front*100, right*100, rear*100, left*100, front_left * 100, front_right * 100, rear_left*100, rear_right*100]
+        """
         return readings_tmp
 
     def quaternion_to_euler(self, x, y, z, w):

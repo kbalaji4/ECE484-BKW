@@ -152,9 +152,21 @@ class particleFilter:
         print(f'y start: {self.y_start}')
         print(f'bob: {self.bob}')
         # print(f'world: {self.world}')
-        print(f'initial model state: {self.getModelState()}')
+        """ 
+        bob has methods to getModelState, read_sensor from LidarProcessing
+        bob getModelState (Robot class super of Particle) 
+        """
+        print(f'initial bob model state: {self.bob.getModelState()}') 
+        print(f'initial bob read sensor: {self.bob.read_sensor()}')
+        # print(f'initial model state: {self.getModelState()}')
         count = 0 
+        self.world.clear_objects()
         while True:
+            time.sleep(0.01)
+            self.world.show_robot(self.bob)
+            self.world.show_particles(self.particles, show_frequency = 10)
+            self.world.show_estimated_location(self.particles) # estimated?
+
             ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
             # modelState = self.GetModelState() # how do u get current particles?
 
@@ -173,10 +185,12 @@ class particleFilter:
         you can properly predict the new location of the particle.
             """
             # print(f'count: {count}')
-            # print(f'model state: {self.getModelState()}')
-            # print(f'control: {len(self.control)}')
+            # print(f'bob model state at count {count}: x, y {self.bob.getModelState().pose.position.x, self.bob.getModelState().pose.position.y}')
+            # print(f'bob model read sensor at count {count}: {self.bob.read_sensor()}')
             # count += 1
             # time.sleep(1)
+            # print(f'model state: {self.getModelState()}')
+            # print(f'control: {len(self.control)}')
             # current_state = []
             # vehicle_dynamics(t, vars, vr, delta):
             #     curr_x = vars[0]
