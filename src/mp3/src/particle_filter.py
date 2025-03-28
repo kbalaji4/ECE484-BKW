@@ -162,7 +162,16 @@ class particleFilter:
         count = 0 
         self.world.clear_objects()
         while True:
+            self.world.clear_objects()
             time.sleep(0.01)
+            """ 
+            read_sensor alr updates x, y, heading for you
+            """
+            readings_robot = self.bob.read_sensor() 
+            # self.bob.x = self.bob.getModelState().pose.position.x
+            # self.bob.y = self.bob.getModelState().pose.position.y
+            # self.bob.heading = self.bob.getModelState().pose.orientation.z
+            
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
             self.world.show_estimated_location(self.particles) # estimated?

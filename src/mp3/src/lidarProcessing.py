@@ -140,6 +140,8 @@ class LidarProcessing:
         filter_left = np.logical_and(filter_left, pixel_vals > 128)
         indices = np.argwhere(filter_left).flatten()
 
+        # print(f'left: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
+
         self.x_left = np.mean(x_points[indices])
         self.y_left = np.mean(y_points[indices])
         
@@ -148,6 +150,8 @@ class LidarProcessing:
         filter_right = np.logical_and(filter_right, y_points < 0)
         filter_right = np.logical_and(filter_right, pixel_vals > 128)
         indices = np.argwhere(filter_right).flatten()
+
+        # print(f'right: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
 
         self.x_right = np.mean(x_points[indices])
         self.y_right = np.mean(y_points[indices])
@@ -158,6 +162,8 @@ class LidarProcessing:
         filter_rear = np.logical_and(filter_rear, pixel_vals > 128)
         indices = np.argwhere(filter_rear).flatten()
 
+        # print(f'rear: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
+
         self.x_rear = np.mean(x_points[indices])
         self.y_rear = np.mean(y_points[indices])
 
@@ -166,6 +172,8 @@ class LidarProcessing:
         filter_front = np.logical_and(filter_front, x_points > 0)
         filter_front = np.logical_and(filter_front, pixel_vals > 128)
         indices = np.argwhere(filter_front).flatten()
+
+        # print(f'front: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
 
         self.x_front = np.mean(x_points[indices])
         self.y_front = np.mean(y_points[indices])
