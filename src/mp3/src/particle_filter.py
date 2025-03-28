@@ -162,8 +162,8 @@ class particleFilter:
         count = 0 
         self.world.clear_objects()
         while True:
-            self.world.clear_objects()
-            time.sleep(0.01)
+            self.world.clear_objects() # super necessary, otherwise u get streaks
+            # time.sleep(0.01) # may not be necessary
             """ 
             read_sensor alr updates x, y, heading for you
             """
