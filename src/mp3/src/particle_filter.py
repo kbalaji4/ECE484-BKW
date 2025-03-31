@@ -98,8 +98,23 @@ class particleFilter:
 
         ## TODO #####
 
+        # get total weight: get sensor reading from each particle and compare with real robot sensor readings
+        total_weight = 0
+        for particle in self.particles:
+            readings_particle = particle.read_sensor()
+            # readings robot is first cuz it's x1 in weight_gaussian_kernel. either gauss or uniform
+            particle.weight = self.weight_gaussian_kernel(readings_robot, readings_particle)
+            total_weight += particle.weight
+        
+        # normalize weight
+        if total_weight > 0:
+            for particle in self.particles:
+                particle.weight /= total_weight
+        else:
+            # if total weight is 0, set all weights to be uniform. would this ever happen tho?
+            for particle in self.particles:
+                particle.weight = 1.0 / len(self.particles)
         ###############
-        # pass
 
     def resampleParticle(self):
         """
@@ -120,8 +135,26 @@ class particleFilter:
         3. The index of that range would correspond to the particle that should be created.
         4. Repeat sampling until you have the desired number of samples.
         """
-        
 
+        # 1: array of cumsum
+        weights = [particle.weight for particle in self.particles] # weights are normalized [0, 1]
+        cumulative_sum = np.cumsum(weights)
+        for _ in range(self.num_particles):
+            # 2: rando sample from cumsum
+            random_number = np.random.uniform(0, 1) # sample from cumsum basically
+            index = np.searchsorted(cumulative_sum, random_number)
+            # 3: index corresponds to particle we want to create        self.particles = particles_new
+
+            selected_particle = self.particles[index]
+            # 4: create a new particle with noise. we are doing this for each particle duh
+            particles_new.append(Particle(
+                x=selected_particle.x,
+                y=selected_particle.y,
+                maze=self.world,
+                heading=selected_particle.heading,
+                sensor_limit=self.sensor_limit,
+                noisy=True
+            ))
         ###############
 
         self.particles = particles_new
@@ -129,15 +162,33 @@ class particleFilter:
     def particleMotionModel(self):
         """
         Description:
-            Estimate the next state for each particle according to the control input from actual robot 
-            You can either use ode function or vehicle_dynamics function provided above
+            Estimate the next state for each particle according to the control input from actual robot.
+            You can either use ode function or vehicle_dynamics function, we first choose vehicle_dynamics
+            1. for every particle
+            2. get the new x, y, heading for that particle using the vehicle_dynamics function and new control
+            3. do this for all the new control steps that appeared since the last update (each control signal is 0.01s)
+
+            output: none, it just modifies self.particles and self.control
         """
         ## TODO #####
         # vehicle_dynamics(t, vars, vr, delta)
-        
-
+        dt = 0.01 # timestep of each control signal
+        # get control signals since last update, u should keep clearing this list
+        for particle in self.particles:
+            newx, newy, newheading = particle.x, particle.y, particle.heading
+            for control_step in self.control:
+                v, delta = control_step
+                # newx, y, heading is just the current lol, bad naming
+                dx, dy, dtheta = vehicle_dynamics(dt, [newx, newy, newheading], v, delta)
+                newx += dx * dt
+                newy += dy * dt
+                newheading += dtheta * dt
+                # print(f'newx, newy, newheading: {newx, newy, newheading}')
+            particle.x, particle.y, particle.heading = newx, newy, newheading # update particle pos
+            particle.fix_invalid_particles()
+            # wait what does try_move() do? it's never called, is it just for us
+        self.control.clear() # clear control signal list for next update
         ###############
-        # pass
 
 
     def runFilter(self):
@@ -159,7 +210,7 @@ class particleFilter:
         print(f'initial bob model state: {self.bob.getModelState()}') 
         print(f'initial bob read sensor: {self.bob.read_sensor()}')
         # print(f'initial model state: {self.getModelState()}')
-        count = 0 
+        # count = 0 
         self.world.clear_objects()
         while True:
             self.world.clear_objects() # super necessary, otherwise u get streaks
@@ -167,10 +218,11 @@ class particleFilter:
             """ 
             read_sensor alr updates x, y, heading for you
             """
-            readings_robot = self.bob.read_sensor() 
-            # self.bob.x = self.bob.getModelState().pose.position.x
-            # self.bob.y = self.bob.getModelState().pose.position.y
-            # self.bob.heading = self.bob.getModelState().pose.orientation.z
+            
+            self.particleMotionModel()  # Predict particle states, "sample motion model"
+            readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
+            self.updateWeight(readings_robot)  # Update particle weights
+            self.resampleParticle()  # Resample particles, this updates self.particles in place alr
             
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
