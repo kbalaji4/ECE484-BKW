@@ -296,7 +296,7 @@ class Maze(object):
         ###############
 
         # Return readings from sensor model in front, right, rear, left direction
-        # 4 Directions
+        # # 4 Directions
         return [d1*100, d2*100, d3*100, d4*100]
 
         # front_left, front_right, rear_left, rear_right
