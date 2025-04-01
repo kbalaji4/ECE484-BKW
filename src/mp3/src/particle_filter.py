@@ -14,8 +14,11 @@ import random
 
 def vehicle_dynamics(t, vars, vr, delta):
     curr_x = vars[0]
-    curr_y = vars[1] 
+    curr_y = vars[1]
     curr_theta = vars[2]
+    # curr_x += 0.5 * np.random.normal(0, 1)
+    # curr_y += 0.5 * np.random.normal(0, 1)
+    # curr_theta += 0.5 * np.random.normal(0, 1)
     
     dx = vr * np.cos(curr_theta)
     dy = vr * np.sin(curr_theta)
@@ -32,13 +35,13 @@ class particleFilter:
         # Modify the initial particle distribution to be within the top-right quadrant of the world, and compare the performance with the whole map distribution.
         for i in range(num_particles):
 
-            # (Default) The whole map
-            x = np.random.uniform(0, world.width)
-            y = np.random.uniform(0, world.height)
+            # # (Default) The whole map
+            # x = np.random.uniform(0, world.width)
+            # y = np.random.uniform(0, world.height)
 
-            # # first quadrant
-            # x = np.random.uniform(world.width/2, world.width)
-            # y = np.random.uniform(world.height/2, world.height)
+            # first quadrant
+            x = np.random.uniform(world.width/2, world.width)
+            y = np.random.uniform(world.height/2, world.height)
 
             particles.append(Particle(x = x, y = y, maze = world, sensor_limit = sensor_limit))
 
@@ -153,8 +156,8 @@ class particleFilter:
                 maze=self.world,
                 heading=selected_particle.heading,
                 sensor_limit=self.sensor_limit,
-                noisy=True,
-                weight=selected_particle.weight
+                noisy=True
+                ,weight=selected_particle.weight
             ))
         ###############
 
@@ -215,7 +218,7 @@ class particleFilter:
         self.world.clear_objects()
         while True:
             self.world.clear_objects() # super necessary, otherwise u get streaks
-            # time.sleep(0.01) # may not be necessary
+            # time.sleep(0.50) # may not be necessary
             """ 
             read_sensor alr updates x, y, heading for you
             """
@@ -239,12 +242,6 @@ class particleFilter:
 
             time step is 0.01s. control is an append only log of the actual v, delta control signals
             vehicle dynamics can take these v, delta as inputs and output x, y, theta (orientation)
-
-             You should perform integra-
-        tion through the whole list of control input stored in self.control with time step 0.01. Since the vehicle
-        control frequency is higher than the particle update frequency, a list of vehicle control inputs will be stored.
-        Therefore, if you only use the most recent control input, your particle motion will be wrong. By doing this,
-        you can properly predict the new location of the particle.
             """
             # print(f'count: {count}')
             # print(f'bob model state at count {count}: x, y {self.bob.getModelState().pose.position.x, self.bob.getModelState().pose.position.y}')
