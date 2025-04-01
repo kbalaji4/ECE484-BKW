@@ -87,6 +87,7 @@ class particleFilter:
         else:
             tmp1 = np.array(x1)
             tmp2 = np.array(x2)
+            # print(f'x1: {tmp1.size}, x2: {tmp2.size}')
             return np.sum(np.exp(-((tmp2-tmp1) ** 2) / (2 * std)))
 
 
@@ -103,7 +104,8 @@ class particleFilter:
         # get total weight: get sensor reading from each particle and compare with real robot sensor readings
         total_weight = 0
         for particle in self.particles:
-            readings_particle = particle.read_sensor()
+            readings_particle = particle.read_sensor() # this reads 4 or 8 directions
+            # robot reads 4, particle reads 8. why particle read 8
             # readings robot is first cuz it's x1 in weight_gaussian_kernel. either gauss or uniform
             particle.weight = self.weight_gaussian_kernel(readings_robot, readings_particle)
             total_weight += particle.weight
@@ -163,6 +165,43 @@ class particleFilter:
 
         self.particles = particles_new
 
+    def resampleParticleSystematic(self):
+        """
+        Description:
+            Perform resample to get a new list of particles
+            use systematic instead of multinomial
+        """
+        particles_new = list()
+
+        weights = [particle.weight for particle in self.particles]  # Normalized weights
+        cumulative_sum = np.cumsum(weights)
+        step = 1.0 / self.num_particles
+        start = np.random.uniform(0, step)
+        positions = [start + i * step for i in range(self.num_particles)]
+
+        index = 0
+        for pos in positions:
+            while pos > cumulative_sum[index]:
+                index += 1
+            selected_particle = self.particles[index]
+            jitter_x = 0
+            jitter_y = 0
+            jitter_heading = 0
+            jitter_x = np.random.normal(0, 0.1)  # Adjust the standard deviation as needed
+            jitter_y = np.random.normal(0, 0.1)
+            jitter_heading = np.random.normal(0, np.pi / 180)  # Small angular jitter
+            particles_new.append(Particle(
+                x=selected_particle.x + jitter_x,
+                y=selected_particle.y + jitter_y,
+                maze=self.world,
+                heading=selected_particle.heading + jitter_heading,
+                sensor_limit=self.sensor_limit,
+                noisy=True,
+                weight=selected_particle.weight
+            ))
+
+        self.particles = particles_new
+
     def particleMotionModel(self):
         """
         Description:
@@ -216,21 +255,31 @@ class particleFilter:
         # print(f'initial model state: {self.getModelState()}')
         # count = 0 
         self.world.clear_objects()
+        i = 0
+        update_frequency = 1 
+        directionsPrinted = 0
+        # update 1/update_frequency times
         while True:
+            readings = self.bob.read_sensor()
+            if readings and directionsPrinted == 0:
+                directionsPrinted = 1
+                print(f'num directions: {len(readings), readings}')
             self.world.clear_objects() # super necessary, otherwise u get streaks
             # time.sleep(0.50) # may not be necessary
             """ 
             read_sensor alr updates x, y, heading for you
             """
-            
-            self.particleMotionModel()  # Predict particle states, "sample motion model"
-            readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
-            self.updateWeight(readings_robot)  # Update particle weights
-            self.resampleParticle()  # Resample particles, this updates self.particles in place alr
-            
+            if i % update_frequency == 0:
+                self.particleMotionModel()  # Predict particle states, "sample motion model"
+                readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
+                self.updateWeight(readings_robot)  # Update particle weights
+                # self.resampleParticle()  # Resample particles, this updates self.particles in place alr
+                self.resampleParticleSystematic()
+
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
             self.world.show_estimated_location(self.particles) # estimated?
+            i+= 1
 
             ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
             # modelState = self.GetModelState() # how do u get current particles?
