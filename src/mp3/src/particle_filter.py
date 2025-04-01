@@ -33,8 +33,8 @@ class particleFilter:
         for i in range(num_particles):
 
             # (Default) The whole map
-            x = np.random.uniform(0, world.width)
-            y = np.random.uniform(0, world.height)
+            x = np.random.uniform(world.width/2, world.width)
+            y = np.random.uniform(world.height/2, world.height)
 
 
             ## first quadrant
@@ -146,6 +146,7 @@ class particleFilter:
             # 3: index corresponds to particle we want to create        self.particles = particles_new
 
             selected_particle = self.particles[index]
+            # noise = 0.05 * np.random.normal(0, 1) # noise for x and y
             # 4: create a new particle with noise. we are doing this for each particle duh
             particles_new.append(Particle(
                 x=selected_particle.x,
@@ -153,7 +154,8 @@ class particleFilter:
                 maze=self.world,
                 heading=selected_particle.heading,
                 sensor_limit=self.sensor_limit,
-                noisy=True
+                noisy=True,
+                weight=selected_particle.weight
             ))
         ###############
 
