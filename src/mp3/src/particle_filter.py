@@ -39,12 +39,12 @@ class particleFilter:
         for i in range(num_particles):
 
             # (Default) The whole map
-            x = np.random.uniform(0, world.width)
-            y = np.random.uniform(0, world.height)
+            # x = np.random.uniform(0, world.width)
+            # y = np.random.uniform(0, world.height)
 
-            # # first quadrant
-            # x = np.random.uniform(world.width/2, world.width)
-            # y = np.random.uniform(world.height/2, world.height)
+            # first quadrant
+            x = np.random.uniform(world.width/2, world.width)
+            y = np.random.uniform(world.height/2, world.height)
 
             particles.append(Particle(x = x, y = y, maze = world, sensor_limit = sensor_limit))
 
@@ -148,20 +148,24 @@ class particleFilter:
         # 1: array of cumsum
         weights = [particle.weight for particle in self.particles] # weights are normalized [0, 1]
         cumulative_sum = np.cumsum(weights)
-        num_random_particles = 0
-        # num_random_particles = int(0.01 * self.num_particles)  #  randomness
-        # for _ in range(num_random_particles):
-        #     randx = np.random.uniform(0, self.world.width)
-        #     randy = np.random.uniform(0, self.world.height)
-        #     # noisy true. default heading is rando sampled
-        #     particles_new.append(Particle(
-        #         x=randx,
-        #         y=randy,
-        #         maze=self.world,
-        #         sensor_limit=self.sensor_limit,
-        #         noisy=True,
-        #         weight = 1.0/self.num_particles # uniform default
-        #     ))
+
+        """ 
+        randomness
+        """ 
+        # num_random_particles = 0
+        num_random_particles = int(0.005 * self.num_particles)  #  randomness
+        for _ in range(num_random_particles):
+            randx = np.random.uniform(0, self.world.width)
+            randy = np.random.uniform(0, self.world.height)
+            # noisy true. default heading is rando sampled
+            particles_new.append(Particle(
+                x=randx,
+                y=randy,
+                maze=self.world,
+                sensor_limit=self.sensor_limit,
+                noisy=True,
+                weight = 1.0/self.num_particles # uniform default
+            ))
 
         for _ in range(self.num_particles - num_random_particles):
             # 2: rando sample from cumsum
