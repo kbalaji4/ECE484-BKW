@@ -10,6 +10,9 @@ from scipy.integrate import ode
 
 import time # debugging
 
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
 import random
 
 def vehicle_dynamics(t, vars, vr, delta):
@@ -114,7 +117,9 @@ class particleFilter:
         if total_weight > 0:
             for particle in self.particles:
                 particle.weight /= total_weight
+
         else:
+            print(f'total weight: {total_weight}, setting uniform weights')
             # if total weight is 0, set all weights to be uniform. would this ever happen tho?
             for particle in self.particles:
                 particle.weight = 1.0 / len(self.particles)
@@ -165,41 +170,62 @@ class particleFilter:
 
         self.particles = particles_new
 
-    def resampleParticleSystematic(self):
-        """
-        Description:
-            Perform resample to get a new list of particles
-            use systematic instead of multinomial
-        """
-        particles_new = list()
-
-        weights = [particle.weight for particle in self.particles]  # Normalized weights
+    def resampleParticleQuadrant(self):
+        particles_new = []
+    
+        # Calculate quadrant weights
+        quadrant_weights = [0, 0, 0, 0]
+        # quadrant_indices = [[], [], [], []]
+        for p in self.particles:
+            if p.x < self.world.width/2 and p.y < self.world.height/2:
+                quadrant_weights[0] += p.weight
+            elif p.x >= self.world.width/2 and p.y < self.world.height/2:
+                quadrant_weights[1] += p.weight
+            elif p.x < self.world.width/2 and p.y >= self.world.height/2:
+                quadrant_weights[2] += p.weight
+            else:
+                quadrant_weights[3] += p.weight
+        
+        # Normalize quadrant weights
+        total_q_weight = sum(quadrant_weights)
+        if total_q_weight > 0:
+            quadrant_probs = [w/total_q_weight for w in quadrant_weights]
+        else:
+            quadrant_probs = [0.25, 0.25, 0.25, 0.25]
+        
+        weights = [p.weight for p in self.particles]
         cumulative_sum = np.cumsum(weights)
-        step = 1.0 / self.num_particles
-        start = np.random.uniform(0, step)
-        positions = [start + i * step for i in range(self.num_particles)]
-
-        index = 0
-        for pos in positions:
-            while pos > cumulative_sum[index]:
-                index += 1
-            selected_particle = self.particles[index]
-            jitter_x = 0
-            jitter_y = 0
-            jitter_heading = 0
-            jitter_x = np.random.normal(0, 0.1)  # Adjust the standard deviation as needed
-            jitter_y = np.random.normal(0, 0.1)
-            jitter_heading = np.random.normal(0, np.pi / 180)  # Small angular jitter
+        
+        for _ in range(self.num_particles):
+            # First select a quadrant based on quadrant weights
+            selected_quadrant = np.random.choice(4, p=quadrant_probs)
+            
+            # Then resample from particles in that quadrant
+            particles_in_quadrant = [p for p in self.particles if 
+                                ((p.x < self.world.width/2 and p.y < self.world.height/2 and selected_quadrant == 0) or
+                                    (p.x >= self.world.width/2 and p.y < self.world.height/2 and selected_quadrant == 1) or
+                                    (p.x < self.world.width/2 and p.y >= self.world.height/2 and selected_quadrant == 2) or
+                                    (p.x >= self.world.width/2 and p.y >= self.world.height/2 and selected_quadrant == 3))]
+            
+            if particles_in_quadrant:
+                # Sample from this quadrant's particles
+                q_weights = [p.weight for p in particles_in_quadrant]
+                q_weights = np.array(q_weights) / sum(q_weights)
+                selected_particle = np.random.choice(particles_in_quadrant, p=q_weights)
+            else:
+                # If no particles in quadrant (unlikely), sample globally
+                selected_particle = self.particles[np.searchsorted(cumulative_sum, np.random.uniform(0, 1))]
+            
             particles_new.append(Particle(
-                x=selected_particle.x + jitter_x,
-                y=selected_particle.y + jitter_y,
+                x=selected_particle.x,
+                y=selected_particle.y,
                 maze=self.world,
-                heading=selected_particle.heading + jitter_heading,
+                heading=selected_particle.heading,
                 sensor_limit=self.sensor_limit,
-                noisy=True,
-                weight=selected_particle.weight
+                noisy=True
+                ,weight=selected_particle.weight
             ))
-
+        
         self.particles = particles_new
 
     def particleMotionModel(self):
@@ -257,7 +283,30 @@ class particleFilter:
         self.world.clear_objects()
         i = 0
         update_frequency = 1 
+        plot_update_frequency = 1
         directionsPrinted = 0
+
+        # error tracking
+        position_errors = []
+        orientation_errors = []
+
+        # # position, orientation error plots
+        # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 5))
+        # ax1.set_title("Position Error (Euclidean Distance)")
+        # ax1.set_xlabel("Iterations")
+        # ax1.set_ylabel("Error (meters)")
+        # ax2.set_title("Orientation Error")
+        # ax2.set_xlabel("Iterations")
+        # ax2.set_ylabel("Error (radians)")
+
+        # try plotting weight distributions? like x, y position and then weight color
+        fig_weights, ax_weights = plt.subplots(figsize=(5, 4))
+        ax_weights.set_title("Particle Weight Distribution")
+        ax_weights.set_xlabel("Y Position")
+        ax_weights.set_ylabel("X Position")
+        scatter = ax_weights.scatter([], [], c=[], cmap="viridis", s=10)
+        fig_weights.colorbar(scatter, ax=ax_weights, label="Particle Weight")
+
         # update 1/update_frequency times
         while True:
             readings = self.bob.read_sensor()
@@ -274,45 +323,40 @@ class particleFilter:
                 readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
                 self.updateWeight(readings_robot)  # Update particle weights
                 # self.resampleParticle()  # Resample particles, this updates self.particles in place alr
-                self.resampleParticleSystematic()
+                self.resampleParticleQuadrant()
 
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
-            self.world.show_estimated_location(self.particles) # estimated?
-            i+= 1
+            estimated_location = self.world.show_estimated_location(self.particles) # estimated?
 
-            ## TODO: (i) Implement Section 3.2.2. (ii) Display robot and particles on map. (iii) Compute and save position/heading error to plot. #####
-            # modelState = self.GetModelState() # how do u get current particles?
+            # plot time
+            # if estimated_location:
+            #     x_est, y_est, heading_est = estimated_location
+            #     x_actual, y_actual = self.bob.x, self.bob.y
+            #     heading_actual = self.bob.heading
 
-            # sample motion model (p) which are teh particles representing the current distribution
-            """ 
-            self.controlSub = rospy.Subscriber("/gem/control", Float32MultiArray, self.__controlHandler, queue_size = 1)
-            self.control = []                   # A list of control signal from the vehicle
+            #     position_error = np.sqrt((x_est - x_actual) ** 2 + (y_est - y_actual) ** 2)
+            #     orientation_error = abs(heading_est - heading_actual)
 
-            time step is 0.01s. control is an append only log of the actual v, delta control signals
-            vehicle dynamics can take these v, delta as inputs and output x, y, theta (orientation)
-            """
-            # print(f'count: {count}')
-            # print(f'bob model state at count {count}: x, y {self.bob.getModelState().pose.position.x, self.bob.getModelState().pose.position.y}')
-            # print(f'bob model read sensor at count {count}: {self.bob.read_sensor()}')
-            # count += 1
-            # time.sleep(1)
-            # print(f'model state: {self.getModelState()}')
-            # print(f'control: {len(self.control)}')
-            # current_state = []
-            # vehicle_dynamics(t, vars, vr, delta):
-            #     curr_x = vars[0]
-            #     curr_y = vars[1] 
-            #     curr_theta = vars[2]
+            #     position_errors.append(position_error)
+            #     orientation_errors.append(orientation_error)
+            if i % plot_update_frequency == 0:
+                # # Update error plots, ok maybe not live then
+                # ax1.clear()
+                # ax1.plot(position_errors, label="Position Error")
+                # ax1.legend()
+
+                # ax2.clear()
+                # ax2.plot(orientation_errors, label="Orientation Error")
+                # ax2.legend()
+
                 
-            #     dx = vr * np.cos(curr_theta)
-            #     dy = vr * np.sin(curr_theta)
-            #     dtheta = delta
-            #     return [dx,dy,dtheta]
-
-            # reading = vehicl_read_sensor() # this might be model state
-            # self.updateWeight(readings_robot) # updateWeight(p, reading) 
-
-            # self.resampleParticle() # p = resampleParticle(p)
-               
+                # weight distribution, don't rely on estimated_location but keep them in frequency
+                ax_weights.clear()
+                x_positions = [particle.x for particle in self.particles]
+                y_positions = [particle.y for particle in self.particles]
+                weights = [particle.weight for particle in self.particles]
+                scatter = ax_weights.scatter(x_positions, y_positions, c=weights, cmap="viridis", s=10)
+                plt.pause(0.01)
+            i+= 1
                 ###############
