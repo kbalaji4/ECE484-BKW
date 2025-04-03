@@ -148,7 +148,22 @@ class particleFilter:
         # 1: array of cumsum
         weights = [particle.weight for particle in self.particles] # weights are normalized [0, 1]
         cumulative_sum = np.cumsum(weights)
-        for _ in range(self.num_particles):
+        num_random_particles = 0
+        # num_random_particles = int(0.01 * self.num_particles)  #  randomness
+        # for _ in range(num_random_particles):
+        #     randx = np.random.uniform(0, self.world.width)
+        #     randy = np.random.uniform(0, self.world.height)
+        #     # noisy true. default heading is rando sampled
+        #     particles_new.append(Particle(
+        #         x=randx,
+        #         y=randy,
+        #         maze=self.world,
+        #         sensor_limit=self.sensor_limit,
+        #         noisy=True,
+        #         weight = 1.0/self.num_particles # uniform default
+        #     ))
+
+        for _ in range(self.num_particles - num_random_particles):
             # 2: rando sample from cumsum
             random_number = np.random.uniform(0, 1) # sample from cumsum basically
             index = np.searchsorted(cumulative_sum, random_number)
@@ -175,15 +190,19 @@ class particleFilter:
     
         # Calculate quadrant weights
         quadrant_weights = [0, 0, 0, 0]
-        # quadrant_indices = [[], [], [], []]
-        for p in self.particles:
-            if p.x < self.world.width/2 and p.y < self.world.height/2:
+        quadrant_indices = [[], [], [], []]
+        for idx, p in enumerate(self.particles):
+            if p.x < self.world.width / 2 and p.y < self.world.height / 2:
+                quadrant_indices[0].append(idx)
                 quadrant_weights[0] += p.weight
-            elif p.x >= self.world.width/2 and p.y < self.world.height/2:
+            elif p.x >= self.world.width / 2 and p.y < self.world.height / 2:
+                quadrant_indices[1].append(idx)
                 quadrant_weights[1] += p.weight
-            elif p.x < self.world.width/2 and p.y >= self.world.height/2:
+            elif p.x < self.world.width / 2 and p.y >= self.world.height / 2:
+                quadrant_indices[2].append(idx)
                 quadrant_weights[2] += p.weight
             else:
+                quadrant_indices[3].append(idx)
                 quadrant_weights[3] += p.weight
         
         # Normalize quadrant weights
@@ -193,27 +212,53 @@ class particleFilter:
         else:
             quadrant_probs = [0.25, 0.25, 0.25, 0.25]
         
-        weights = [p.weight for p in self.particles]
-        cumulative_sum = np.cumsum(weights)
+        # add randomness, particles are sampled globally
+
+
+        num_random_particles = int(0.01 * self.num_particles)  # 1% randomness
+        for _ in range(num_random_particles):
+            randx = np.random.uniform(0, self.world.width)
+            randy = np.random.uniform(0, self.world.height)
+            # noisy true. default heading is rando sampled
+            particles_new.append(Particle(
+                x=randx,
+                y=randy,
+                maze=self.world,
+                sensor_limit=self.sensor_limit,
+                noisy=True,
+                weight = 1.0/self.num_particles # uniform default
+            ))
         
-        for _ in range(self.num_particles):
+        quadrant_cumsums = []
+        for q_indices in quadrant_indices:
+            q_weights = [self.particles[idx].weight for idx in q_indices]
+            q_cumsum = np.cumsum(q_weights) if q_weights else []
+            quadrant_cumsums.append(q_cumsum)
+        # print(f'quadraunt cum sums: {quadrant_cumsums}')
+        # print(f'len(quadrant_cumsums): {len(quadrant_cumsums[0]), len(quadrant_cumsums[1]), len(quadrant_cumsums[2]), len(quadrant_cumsums[3])}')
+
+
+        num_quadrant_particles = self.num_particles - num_random_particles
+
+        for _ in range(num_quadrant_particles):
             # First select a quadrant based on quadrant weights
             selected_quadrant = np.random.choice(4, p=quadrant_probs)
             
             # Then resample from particles in that quadrant
-            particles_in_quadrant = [p for p in self.particles if 
-                                ((p.x < self.world.width/2 and p.y < self.world.height/2 and selected_quadrant == 0) or
-                                    (p.x >= self.world.width/2 and p.y < self.world.height/2 and selected_quadrant == 1) or
-                                    (p.x < self.world.width/2 and p.y >= self.world.height/2 and selected_quadrant == 2) or
-                                    (p.x >= self.world.width/2 and p.y >= self.world.height/2 and selected_quadrant == 3))]
-            
-            if particles_in_quadrant:
-                # Sample from this quadrant's particles
-                q_weights = [p.weight for p in particles_in_quadrant]
-                q_weights = np.array(q_weights) / sum(q_weights)
-                selected_particle = np.random.choice(particles_in_quadrant, p=q_weights)
+            if quadrant_indices[selected_quadrant]:
+                random_number = np.random.uniform(0, 1)
+                selected_idx_within_quadrant = np.searchsorted(quadrant_cumsums[selected_quadrant], random_number) - 1 # - 1? idk
+                # print(f'selected idx within quadrant: {selected_idx_within_quadrant}')
+                selected_idx = quadrant_indices[selected_quadrant][selected_idx_within_quadrant]
+                selected_particle = self.particles[selected_idx]
+                # don't just do random.choice lol
             else:
-                # If no particles in quadrant (unlikely), sample globally
+                # if no particles in the quadrant we picked, sample
+                
+                # just global random sample lol
+                # selected_particle = random.choice(self.particles)
+
+                # below is multinomial sampling
                 selected_particle = self.particles[np.searchsorted(cumulative_sum, np.random.uniform(0, 1))]
             
             particles_new.append(Particle(
@@ -322,8 +367,8 @@ class particleFilter:
                 self.particleMotionModel()  # Predict particle states, "sample motion model"
                 readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
                 self.updateWeight(readings_robot)  # Update particle weights
-                # self.resampleParticle()  # Resample particles, this updates self.particles in place alr
-                self.resampleParticleQuadrant()
+                self.resampleParticle()  # Resample particles, this updates self.particles in place alr
+                # self.resampleParticleQuadrant() # quadrant resample, quite fast but wrong?
 
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
