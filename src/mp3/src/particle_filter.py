@@ -153,7 +153,7 @@ class particleFilter:
         randomness
         """ 
         # num_random_particles = 0
-        num_random_particles = int(0.005 * self.num_particles)  #  randomness
+        num_random_particles = int(0.0025 * self.num_particles)  #  randomness
         for _ in range(num_random_particles):
             randx = np.random.uniform(0, self.world.width)
             randy = np.random.uniform(0, self.world.height)
@@ -276,7 +276,152 @@ class particleFilter:
             ))
         
         self.particles = particles_new
+    
+    def resampleParticleSystematic(self):
+        """
+        Description:
+            Perform systematic resampling to get a new list of particles.
+            Uses a single random number u_bar ~ U[0,1) to generate ordered
+            numbers u_k = (k-1 + u_bar)/N for selecting particles.
+        """
+        particles_new = list()
+        weights = np.array([particle.weight for particle in self.particles])
+        N = len(self.particles)
+        
+        # Generate one random number u_bar ~ U[0,1)
+        u_bar = np.random.uniform(0, 1)
+        
+        # Generate systematic points u_k = (k-1 + u_bar)/N
+        u_k = (np.arange(N) + u_bar) / N
+        
+        # Calculate cumulative sum of weights
+        cumsum = np.cumsum(weights)
+        
+        # Initialize index for original particles
+        index = 0
+        
+        # Loop through systematic points
+        for u in u_k:
+            # Find the particle index for this systematic point
+            while cumsum[index] < u:
+                index += 1
+                
+            # Get the selected particle
+            selected_particle = self.particles[index]
+            
+            # Create new particle with noise
+            particles_new.append(Particle(
+                x=selected_particle.x,
+                y=selected_particle.y,
+                maze=self.world,
+                heading=selected_particle.heading,
+                sensor_limit=self.sensor_limit,
+                noisy=True,
+                weight=selected_particle.weight
+            ))
+        
+        self.particles = particles_new
+    def resampleParticleStratified(self):
+        """
+        Description:
+            Perform stratified resampling to get a new list of particles.
+            Each stratum has size 1/N and a random number is drawn from within each stratum.
+        """
+        particles_new = list()
+        weights = np.array([particle.weight for particle in self.particles])
+        N = len(self.particles)
+        
+        # Generate stratified random numbers
+        # Each random number is drawn from its own stratum
+        random_numbers = (np.arange(N) + np.random.uniform(0, 1, N)) / N
+        
+        # Calculate cumulative sum of weights
+        cumsum = np.cumsum(weights)
+        
+        # Initialize index for original particles
+        index = 0
+        
+        # Loop through all stratified random numbers
+        for random_num in random_numbers:
+            # Find the particle index for this random number
+            while cumsum[index] < random_num:
+                index += 1
+            
+            # Get the selected particle
+            selected_particle = self.particles[index]
+            
+            # Create new particle with noise
+            particles_new.append(Particle(
+                x=selected_particle.x,
+                y=selected_particle.y,
+                maze=self.world,
+                heading=selected_particle.heading,
+                sensor_limit=self.sensor_limit,
+                noisy=True,
+                weight=selected_particle.weight
+            ))
+        
+        self.particles = particles_new
 
+    def resampleParticleResidual(self):
+        """
+        Description:
+            Perform residual resampling to get a new list of particles.
+            First deterministically allocate particles based on integer weights,
+            then use multinomial resampling for the remainder.
+        """
+        particles_new = list()
+        N = len(self.particles)
+        weights = np.array([particle.weight for particle in self.particles])
+        
+        # Calculate number of copies for each particle (first step)
+        N_weights = N * weights
+        integer_weights = np.floor(N_weights).astype(int)
+        sum_integer_weights = np.sum(integer_weights)
+        
+        # First pass: deterministic allocation
+        for i, count in enumerate(integer_weights):
+            for _ in range(count):
+                selected_particle = self.particles[i]
+                particles_new.append(Particle(
+                    x=selected_particle.x,
+                    y=selected_particle.y,
+                    maze=self.world,
+                    heading=selected_particle.heading,
+                    sensor_limit=self.sensor_limit,
+                    noisy=True,
+                    weight=selected_particle.weight
+                ))
+        
+        # Second pass: multinomial resampling for remaining particles
+        remaining_N = N - sum_integer_weights
+        if remaining_N > 0:
+            # Calculate residual weights
+            residual_weights = (N_weights - integer_weights) / remaining_N
+            
+            # Normalize residual weights
+            residual_weights = residual_weights / np.sum(residual_weights)
+            
+            # Compute cumulative sum for residual weights
+            cumsum = np.cumsum(residual_weights)
+            
+            # Sample remaining particles
+            for _ in range(remaining_N):
+                random_number = np.random.uniform(0, 1)
+                index = np.searchsorted(cumsum, random_number)
+                selected_particle = self.particles[index]
+                
+                particles_new.append(Particle(
+                    x=selected_particle.x,
+                    y=selected_particle.y,
+                    maze=self.world,
+                    heading=selected_particle.heading,
+                    sensor_limit=self.sensor_limit,
+                    noisy=True,
+                    weight=selected_particle.weight
+                ))
+        
+        self.particles = particles_new
     def particleMotionModel(self):
         """
         Description:
@@ -293,19 +438,33 @@ class particleFilter:
         dt = 0.01 # timestep of each control signal
         # get control signals since last update, u should keep clearing this list
         for particle in self.particles:
-            newx, newy, newheading = particle.x, particle.y, particle.heading
+            cur_x, cur_y, cur_heading = particle.x, particle.y, particle.heading
             for control_step in self.control:
                 v, delta = control_step
                 # newx, y, heading is just the current lol, bad naming
-                dx, dy, dtheta = vehicle_dynamics(dt, [newx, newy, newheading], v, delta)
-                newx += dx * dt
-                newy += dy * dt
-                newheading += dtheta * dt
+                dtheta = delta * dt
+                cur_x += v * (np.sin(cur_heading + dtheta) - np.sin(cur_heading))/delta
+                cur_y += v * (np.cos(cur_heading) - np.cos(cur_heading + dtheta))/delta
+                cur_heading += dtheta
                 # print(f'newx, newy, newheading: {newx, newy, newheading}')
-            particle.x, particle.y, particle.heading = newx, newy, newheading # update particle pos
+            particle.x, particle.y, particle.heading = cur_x, cur_y, cur_heading # update particle pos
             particle.fix_invalid_particles()
             # wait what does try_move() do? it's never called, is it just for us
         self.control.clear() # clear control signal list for next update
+        # for particle in self.particles:
+        #     newx, newy, newheading = particle.x, particle.y, particle.heading
+        #     for control_step in self.control:
+        #         v, delta = control_step
+        #         # newx, y, heading is just the current lol, bad naming
+        #         dx, dy, dtheta = vehicle_dynamics(dt, [newx, newy, newheading], v, delta)
+        #         newx += dx * dt
+        #         newy += dy * dt
+        #         newheading += dtheta * dt
+        #         # print(f'newx, newy, newheading: {newx, newy, newheading}')
+        #     particle.x, particle.y, particle.heading = newx, newy, newheading # update particle pos
+        #     particle.fix_invalid_particles()
+        #     # wait what does try_move() do? it's never called, is it just for us
+        # self.control.clear() # clear control signal list for next update
         ###############
 
 
@@ -356,6 +515,19 @@ class particleFilter:
         scatter = ax_weights.scatter([], [], c=[], cmap="viridis", s=10)
         fig_weights.colorbar(scatter, ax=ax_weights, label="Particle Weight")
 
+        # # Initialize plots for sensor readings and particle averages
+        # fig, (ax_sensor, ax_particle_avg) = plt.subplots(2, 1, figsize=(6, 5))
+        # ax_sensor.set_title("Robot Sensor Readings")
+        # ax_sensor.set_xlabel("Direction")
+        # ax_sensor.set_ylabel("Distance (cm)")
+        # ax_sensor.set_xticks([])  # Will set dynamically based on direction count
+
+        # ax_particle_avg.set_title("Average Particle Sensor Readings")
+        # ax_particle_avg.set_xlabel("Direction")
+        # ax_particle_avg.set_ylabel("Distance (cm)")
+        # ax_particle_avg.set_xticks([])  # Will set dynamically based on direction count
+
+
         # update 1/update_frequency times
         while True:
             readings = self.bob.read_sensor()
@@ -373,6 +545,9 @@ class particleFilter:
                 self.updateWeight(readings_robot)  # Update particle weights
                 self.resampleParticle()  # Resample particles, this updates self.particles in place alr
                 # self.resampleParticleQuadrant() # quadrant resample, quite fast but wrong?
+                # self.resampleParticleSystematic()
+                # self.resampleParticleStratified()
+                # self.resampleParticleResidual()
 
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
@@ -406,6 +581,25 @@ class particleFilter:
                 y_positions = [particle.y for particle in self.particles]
                 weights = [particle.weight for particle in self.particles]
                 scatter = ax_weights.scatter(x_positions, y_positions, c=weights, cmap="viridis", s=10)
+                # plt.pause(0.01)
+
+                # distance plots
+                # if readings_robot:
+                #     # Plot robot sensor readings
+                #     ax_sensor.clear()
+                #     directions = ['front', 'right', 'rear', 'left', 'front_left', 'front_right', 'rear_left', 'rear_right']
+                #     # directions = [f"Dir {j+1}" for j in range(len(readings_robot))]
+                #     ax_sensor.set_xticks(range(len(readings_robot)))
+                #     ax_sensor.set_xticklabels(directions)
+                #     ax_sensor.bar(range(len(readings_robot)), readings_robot, color="blue", alpha=0.7)
+
+                #     # Calculate and plot average particle readings
+                #     particle_readings = [particle.read_sensor() for particle in self.particles]
+                #     avg_particle_readings = np.mean(particle_readings, axis=0) if particle_readings else []
+                #     ax_particle_avg.clear()
+                #     ax_particle_avg.set_xticks(range(len(avg_particle_readings)))
+                #     ax_particle_avg.set_xticklabels(directions)
+                #     ax_particle_avg.bar(range(len(avg_particle_readings)), avg_particle_readings, color="orange", alpha=0.7)
                 plt.pause(0.01)
             i+= 1
                 ###############

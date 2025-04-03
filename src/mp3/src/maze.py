@@ -297,12 +297,12 @@ class Maze(object):
 
         # Return readings from sensor model in front, right, rear, left direction
         # # 4 Directions
-        return [d1*100, d2*100, d3*100, d4*100]
+        # return [d1*100, d2*100, d3*100, d4*100]
 
         # front_left, front_right, rear_left, rear_right
         # 8 Directions
         # print(f'directions: {d1*100, d2*100, d3*100, d4*100, d5*100, d6*100, d7*100, d8*100}')
-        # return [d1*100, d2*100, d3*100, d4*100, d5*100, d6*100, d7*100, d8*100]
+        return [d1*100, d2*100, d3*100, d4*100, d5*100, d6*100, d7*100, d8*100]
 
 
 class Particle(object):
