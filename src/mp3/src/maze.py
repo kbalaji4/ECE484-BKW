@@ -195,6 +195,23 @@ class Maze(object):
     def clear_objects(self):
         turtle.clearstamps()
 
+    
+    def measure_dist(self, coordinates, sensor_limit, heading):
+        x, y = coordinates
+
+        # Measure distance between wall and vehicle in front direction, +0
+        pos_x = x
+        pos_y = y
+        d = 0
+        dx = np.cos(heading)
+        dy = np.sin(heading)
+        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d < sensor_limit:
+            pos_x = pos_x + dx
+            pos_y = pos_y + dy
+            d += 1
+
+        return d
+
 
     def sensor_model(self, coordinates, sensor_limit, orientation = 0):
         '''
@@ -203,106 +220,15 @@ class Maze(object):
         (up, right, rear, left)
         '''
 
-        x, y = coordinates
+        headings = [orientation + theta for theta in [0, -np.pi/2, -np.pi, np.pi/2, np.pi/4, -np.pi/4, 3*np.pi/4, -3*np.pi/4]]
+        readings = [100*self.measure_dist(coordinates, sensor_limit, heading) for heading in headings]
 
-        # Measure distance between wall and vehicle in front direction, +0
-        pos_x = x
-        pos_y = y
-        d1 = 0
-        dx = np.cos(orientation) * 1 - np.sin(orientation) * 0
-        dy = np.sin(orientation) * 1 + np.cos(orientation) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d1 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d1 += 1
-
-        # Measure distance between wall and vehicle in right direction, -pi/2
-        pos_x = x
-        pos_y = y
-        d2 = 0
-        dx = np.cos(orientation-np.pi/2) * 1 - np.sin(orientation-np.pi/2) * 0
-        dy = np.sin(orientation-np.pi/2) * 1 + np.cos(orientation-np.pi/2) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d2 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d2 += 1
-
-        # Measure distance between wall and vehicle in rear direction, -pi
-        pos_x = x
-        pos_y = y
-        d3 = 0
-        dx = np.cos(orientation-np.pi) * 1 - np.sin(orientation-np.pi) * 0
-        dy = np.sin(orientation-np.pi) * 1 + np.cos(orientation-np.pi) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d3 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d3 += 1
-
-        # Measure distance between wall and vehicle in left direction, +pi/2
-        pos_x = x
-        pos_y = y
-        d4 = 0
-        dx = np.cos(orientation+np.pi/2) * 1 - np.sin(orientation+np.pi/2) * 0
-        dy = np.sin(orientation+np.pi/2) * 1 + np.cos(orientation+np.pi/2) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d4 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d4 += 1
-
-        ## TODO: Add 4 additional sensor directions #####
-
-        # Measure distance between wall and vehicle in front left direction, +pi/4
-        pos_x = x
-        pos_y = y
-        d5 = 0
-        dx = np.cos(orientation+np.pi/4) * 1 - np.sin(orientation+np.pi/4) * 0
-        dy = np.sin(orientation+np.pi/4) * 1 + np.cos(orientation+np.pi/4) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d5 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d5 += 1
-        
-        # Measure distance between wall and vehicle in front right direction, -pi/4
-        pos_x = x
-        pos_y = y
-        d6 = 0
-        dx = np.cos(orientation-np.pi/4) * 1 - np.sin(orientation-np.pi/4) * 0
-        dy = np.sin(orientation-np.pi/4) * 1 + np.cos(orientation-np.pi/4) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d6 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d6 += 1
-
-        # Measure distance between wall and vehicle in rear left direction, +pi/2 + pi/4
-        pos_x = x
-        pos_y = y
-        d7 = 0
-        dx = np.cos(orientation+np.pi/2+np.pi/4) * 1 - np.sin(orientation+np.pi/2+np.pi/4) * 0
-        dy = np.sin(orientation+np.pi/2+np.pi/4) * 1 + np.cos(orientation+np.pi/2+np.pi/4) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d7 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d7 += 1
-        # Measure distance between wall and vehicle in rear right direction, -pi/2 - pi/4
-        pos_x = x
-        pos_y = y
-        d8 = 0
-        dx = np.cos(orientation-np.pi/2-np.pi/4) * 1 - np.sin(orientation-np.pi/2-np.pi/4) * 0
-        dy = np.sin(orientation-np.pi/2-np.pi/4) * 1 + np.cos(orientation-np.pi/2-np.pi/4) * 0
-        while not self.colide_wall(int(round(pos_y)),int(round(pos_x))) and d8 < sensor_limit:
-            pos_x = pos_x + dx
-            pos_y = pos_y + dy
-            d8 += 1
-        ###############
-
-        # Return readings from sensor model in front, right, rear, left direction
-        # # 4 Directions
-        return [d1*100, d2*100, d3*100, d4*100]
+        return readings[:4]
 
         # front_left, front_right, rear_left, rear_right
         # 8 Directions
         # print(f'directions: {d1*100, d2*100, d3*100, d4*100, d5*100, d6*100, d7*100, d8*100}')
-        # return [d1*100, d2*100, d3*100, d4*100, d5*100, d6*100, d7*100, d8*100]
+        # return readings
 
 
 class Particle(object):

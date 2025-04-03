@@ -134,7 +134,7 @@ class particleFilter:
 
         1. Calculate an array of the cumulative sum of the weights.
         2. Randomly generate a number and determine which range in that cumulative weight array to which
-        the number belongs.        ## TODO: Add 4 additional sensor directions #####
+        the number belongs.
 
         3. The index of that range would correspond to the particle that should be created.
         4. Repeat sampling until you have the desired number of samples.
@@ -218,16 +218,16 @@ class particleFilter:
         dt = 0.01 # timestep of each control signal
         # get control signals since last update, u should keep clearing this list
         for particle in self.particles:
-            newx, newy, newheading = particle.x, particle.y, particle.heading
+            cur_x, cur_y, cur_heading = particle.x, particle.y, particle.heading
             for control_step in self.control:
                 v, delta = control_step
                 # newx, y, heading is just the current lol, bad naming
-                dx, dy, dtheta = vehicle_dynamics(dt, [newx, newy, newheading], v, delta)
-                newx += dx * dt
-                newy += dy * dt
-                newheading += dtheta * dt
+                dtheta = delta * dt
+                cur_x += v * (np.sin(cur_heading + dtheta) - np.sin(cur_heading))/delta
+                cur_y += v * (np.cos(cur_heading) - np.cos(cur_heading + dtheta))/delta
+                cur_heading += dtheta
                 # print(f'newx, newy, newheading: {newx, newy, newheading}')
-            particle.x, particle.y, particle.heading = newx, newy, newheading # update particle pos
+            particle.x, particle.y, particle.heading = cur_x, cur_y, cur_heading # update particle pos
             particle.fix_invalid_particles()
             # wait what does try_move() do? it's never called, is it just for us
         self.control.clear() # clear control signal list for next update
@@ -292,7 +292,7 @@ class particleFilter:
             time step is 0.01s. control is an append only log of the actual v, delta control signals
             vehicle dynamics can take these v, delta as inputs and output x, y, theta (orientation)
             """
-            # print(f'count: {count}')
+            # print(f'count: {codirectionsPrintedunt}')
             # print(f'bob model state at count {count}: x, y {self.bob.getModelState().pose.position.x, self.bob.getModelState().pose.position.y}')
             # print(f'bob model read sensor at count {count}: {self.bob.read_sensor()}')
             # count += 1
