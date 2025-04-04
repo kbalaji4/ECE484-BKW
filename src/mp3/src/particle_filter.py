@@ -42,6 +42,10 @@ class particleFilter:
             x = np.random.uniform(0, world.width)
             y = np.random.uniform(0, world.height)
 
+            # # first quadrant
+            # x = np.random.uniform(world.width/2, world.width)
+            # y = np.random.uniform(world.height/2, world.height)
+
             # first quadrant
             x = np.random.uniform(world.width/2, world.width)
             y = np.random.uniform(world.height/2, world.height)
@@ -521,22 +525,22 @@ class particleFilter:
         position_errors = []
         orientation_errors = []
 
-        # # position, orientation error plots
-        # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 5))
-        # ax1.set_title("Position Error (Euclidean Distance)")
-        # ax1.set_xlabel("Iterations")
-        # ax1.set_ylabel("Error (meters)")
-        # ax2.set_title("Orientation Error")
-        # ax2.set_xlabel("Iterations")
-        # ax2.set_ylabel("Error (radians)")
+        # position, orientation error plots
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 5))
+        ax1.set_title("Position Error (Euclidean Distance)")
+        ax1.set_xlabel("Iterations")
+        ax1.set_ylabel("Error (meters)")
+        ax2.set_title("Orientation Error")
+        ax2.set_xlabel("Iterations")
+        ax2.set_ylabel("Error (radians)")
 
-        # try plotting weight distributions? like x, y position and then weight color
-        fig_weights, ax_weights = plt.subplots(figsize=(5, 4))
-        ax_weights.set_title("Particle Weight Distribution")
-        ax_weights.set_xlabel("Y Position")
-        ax_weights.set_ylabel("X Position")
-        scatter = ax_weights.scatter([], [], c=[], cmap="viridis", s=10)
-        fig_weights.colorbar(scatter, ax=ax_weights, label="Particle Weight")
+        # # try plotting weight distributions? like x, y position and then weight color
+        # fig_weights, ax_weights = plt.subplots(figsize=(5, 4))
+        # ax_weights.set_title("Particle Weight Distribution")
+        # ax_weights.set_xlabel("Y Position")
+        # ax_weights.set_ylabel("X Position")
+        # scatter = ax_weights.scatter([], [], c=[], cmap="viridis", s=10)
+        # fig_weights.colorbar(scatter, ax=ax_weights, label="Particle Weight")
 
         # # Initialize plots for sensor readings and particle averages
         # fig, (ax_sensor, ax_particle_avg) = plt.subplots(2, 1, figsize=(6, 5))
@@ -577,33 +581,33 @@ class particleFilter:
             estimated_location = self.world.show_estimated_location(self.particles) # estimated?
 
             # plot time
-            # if estimated_location:
-            #     x_est, y_est, heading_est = estimated_location
-            #     x_actual, y_actual = self.bob.x, self.bob.y
-            #     heading_actual = self.bob.heading
+            if estimated_location:
+                x_est, y_est, heading_est = estimated_location
+                x_actual, y_actual = self.bob.x, self.bob.y
+                heading_actual = self.bob.heading
 
-            #     position_error = np.sqrt((x_est - x_actual) ** 2 + (y_est - y_actual) ** 2)
-            #     orientation_error = abs(heading_est - heading_actual)
+                position_error = np.sqrt((x_est - x_actual) ** 2 + (y_est - y_actual) ** 2)
+                orientation_error = abs((heading_actual - np.radians(heading_est) + np.pi) % (2 * np.pi) - np.pi)
 
-            #     position_errors.append(position_error)
-            #     orientation_errors.append(orientation_error)
+                position_errors.append(position_error)
+                orientation_errors.append(orientation_error)
             if i % plot_update_frequency == 0:
-                # # Update error plots, ok maybe not live then
-                # ax1.clear()
-                # ax1.plot(position_errors, label="Position Error")
-                # ax1.legend()
+                # Update error plots, ok maybe not live then
+                ax1.clear()
+                ax1.plot(position_errors, label="Position Error")
+                ax1.legend()
 
-                # ax2.clear()
-                # ax2.plot(orientation_errors, label="Orientation Error")
-                # ax2.legend()
+                ax2.clear()
+                ax2.plot(orientation_errors, label="Orientation Error")
+                ax2.legend()
 
                 
-                # weight distribution, don't rely on estimated_location but keep them in frequency
-                ax_weights.clear()
-                x_positions = [particle.x for particle in self.particles]
-                y_positions = [particle.y for particle in self.particles]
-                weights = [particle.weight for particle in self.particles]
-                scatter = ax_weights.scatter(x_positions, y_positions, c=weights, cmap="viridis", s=10)
+                # # weight distribution, don't rely on estimated_location but keep them in frequency
+                # ax_weights.clear()
+                # x_positions = [particle.x for particle in self.particles]
+                # y_positions = [particle.y for particle in self.particles]
+                # weights = [particle.weight for particle in self.particles]
+                # scatter = ax_weights.scatter(x_positions, y_positions, c=weights, cmap="viridis", s=10)
                 # plt.pause(0.01)
 
                 # distance plots
