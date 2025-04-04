@@ -39,8 +39,8 @@ class particleFilter:
         for i in range(num_particles):
 
             # (Default) The whole map
-            # x = np.random.uniform(0, world.width)
-            # y = np.random.uniform(0, world.height)
+            x = np.random.uniform(0, world.width)
+            y = np.random.uniform(0, world.height)
 
             # first quadrant
             x = np.random.uniform(world.width/2, world.width)
@@ -92,6 +92,36 @@ class particleFilter:
             tmp2 = np.array(x2)
             # print(f'x1: {tmp1.size}, x2: {tmp2.size}')
             return np.sum(np.exp(-((tmp2-tmp1) ** 2) / (2 * std)))
+
+    def all_diffs(self, robot_reading):
+        diffs = np.array()
+        if(robot_reading is None): return 1
+        for particle in self.particles:
+            np.append(diffs, np.array(particle.read_sensor) - robot_reading)
+        return diffs
+
+    def updateWeight_dynamicSTD(self, readings_robot):
+        diffs = self.all_diffs(np.array(readings_robot))
+        std = np.std(diffs)
+        total_weight = 0
+        for particle in self.particles:
+            readings_particle = particle.read_sensor() # this reads 4 or 8 directions
+            # robot reads 4, particle reads 8. why particle read 8
+            # readings robot is first cuz it's x1 in weight_gaussian_kernel. either gauss or uniform
+            particle.weight = self.weight_gaussian_kernel(readings_robot, readings_particle, std=std)
+            total_weight += particle.weight
+        
+        # normalize weight
+        if total_weight > 0:
+            for particle in self.particles:
+                particle.weight /= total_weight
+
+        else:
+            print(f'total weight: {total_weight}, setting uniform weights')
+            # if total weight is 0, set all weights to be uniform. would this ever happen tho?
+            for particle in self.particles:
+                particle.weight = 1.0 / len(self.particles)
+
 
 
     def updateWeight(self, readings_robot):
@@ -152,20 +182,20 @@ class particleFilter:
         """ 
         randomness
         """ 
-        # num_random_particles = 0
-        num_random_particles = int(0.0025 * self.num_particles)  #  randomness
-        for _ in range(num_random_particles):
-            randx = np.random.uniform(0, self.world.width)
-            randy = np.random.uniform(0, self.world.height)
-            # noisy true. default heading is rando sampled
-            particles_new.append(Particle(
-                x=randx,
-                y=randy,
-                maze=self.world,
-                sensor_limit=self.sensor_limit,
-                noisy=True,
-                weight = 1.0/self.num_particles # uniform default
-            ))
+        num_random_particles = 0
+        # num_random_particles = int(0.0025 * self.num_particles)  #  randomness
+        # for _ in range(num_random_particles):
+        #     randx = np.random.uniform(0, self.world.width)
+        #     randy = np.random.uniform(0, self.world.height)
+        #     # noisy true. default heading is rando sampled
+        #     particles_new.append(Particle(
+        #         x=randx,
+        #         y=randy,
+        #         maze=self.world,
+        #         sensor_limit=self.sensor_limit,
+        #         noisy=True,
+        #         weight = 1.0/self.num_particles # uniform default
+        #     ))
 
         for _ in range(self.num_particles - num_random_particles):
             # 2: rando sample from cumsum
@@ -434,37 +464,30 @@ class particleFilter:
             output: none, it just modifies self.particles and self.control
         """
         ## TODO #####
-        # vehicle_dynamics(t, vars, vr, delta)
-        dt = 0.01 # timestep of each control signal
-        # get control signals since last update, u should keep clearing this list
-        for particle in self.particles:
-            cur_x, cur_y, cur_heading = particle.x, particle.y, particle.heading
-            for control_step in self.control:
-                v, delta = control_step
-                # newx, y, heading is just the current lol, bad naming
-                dtheta = delta * dt
-                cur_x += v * (np.sin(cur_heading + dtheta) - np.sin(cur_heading))/delta
-                cur_y += v * (np.cos(cur_heading) - np.cos(cur_heading + dtheta))/delta
-                cur_heading += dtheta
-                # print(f'newx, newy, newheading: {newx, newy, newheading}')
-            particle.x, particle.y, particle.heading = cur_x, cur_y, cur_heading # update particle pos
-            particle.fix_invalid_particles()
-            # wait what does try_move() do? it's never called, is it just for us
-        self.control.clear() # clear control signal list for next update
-        # for particle in self.particles:
-        #     newx, newy, newheading = particle.x, particle.y, particle.heading
-        #     for control_step in self.control:
-        #         v, delta = control_step
-        #         # newx, y, heading is just the current lol, bad naming
-        #         dx, dy, dtheta = vehicle_dynamics(dt, [newx, newy, newheading], v, delta)
-        #         newx += dx * dt
-        #         newy += dy * dt
-        #         newheading += dtheta * dt
-        #         # print(f'newx, newy, newheading: {newx, newy, newheading}')
-        #     particle.x, particle.y, particle.heading = newx, newy, newheading # update particle pos
-        #     particle.fix_invalid_particles()
-        #     # wait what does try_move() do? it's never called, is it just for us
-        # self.control.clear() # clear control signal list for next update
+        if not self.control:
+            return
+
+        controls = self.control.copy()
+        self.control = []  # reset after copying
+
+        dt = 0.01  # time step
+        for p in self.particles:
+            state = [p.x, p.y, p.heading]
+            solver = ode(vehicle_dynamics).set_integrator('dopri5')
+            solver.set_initial_value(state, 0)
+
+            for control_input in controls:
+                v, delta = control_input
+                solver.set_f_params(v, delta)
+                solver.integrate(solver.t + dt)
+
+            # Update particle with final position
+            p.x = solver.y[0]
+            p.y = solver.y[1]
+            p.heading = solver.y[2] % (2 * np.pi)
+
+            p.fix_invalid_particles()
+        
         ###############
 
 
