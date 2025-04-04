@@ -93,14 +93,6 @@ class LidarProcessing:
         y_max = 1 + int((self.fwd_range[1] - self.fwd_range[0]) / self.resolution)
         im = np.zeros([y_max, x_max], dtype=np.uint8)
 
-        """ 
-        ranges:
-        resolution = 0.1
-        side_range = (-10, 10)
-        fwd_range = (0., 25.)
-        height_range = (-1.5, 0.5)
-        """
-
         if len(data) == 0:
             return im
 
@@ -140,8 +132,6 @@ class LidarProcessing:
         filter_left = np.logical_and(filter_left, pixel_vals > 128)
         indices = np.argwhere(filter_left).flatten()
 
-        # print(f'left: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
-
         self.x_left = np.mean(x_points[indices])
         self.y_left = np.mean(y_points[indices])
         
@@ -150,8 +140,6 @@ class LidarProcessing:
         filter_right = np.logical_and(filter_right, y_points < 0)
         filter_right = np.logical_and(filter_right, pixel_vals > 128)
         indices = np.argwhere(filter_right).flatten()
-
-        # print(f'right: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
 
         self.x_right = np.mean(x_points[indices])
         self.y_right = np.mean(y_points[indices])
@@ -162,8 +150,6 @@ class LidarProcessing:
         filter_rear = np.logical_and(filter_rear, pixel_vals > 128)
         indices = np.argwhere(filter_rear).flatten()
 
-        # print(f'rear: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
-
         self.x_rear = np.mean(x_points[indices])
         self.y_rear = np.mean(y_points[indices])
 
@@ -173,87 +159,41 @@ class LidarProcessing:
         filter_front = np.logical_and(filter_front, pixel_vals > 128)
         indices = np.argwhere(filter_front).flatten()
 
-        # print(f'front: indices, len(x_points[indices]): {indices, len(x_points[indices])}')
-
         self.x_front = np.mean(x_points[indices])
         self.y_front = np.mean(y_points[indices])
         
         ## TODO: Add 4 additional sensor directions #####
         # Handle sensor at 4 diagnal direction
-        # x is vertical axis, y is horizontal axis
-
-        # front left
-        filter_front_left = np.logical_and(x_points > 0, y_points > 0)  # front AND left quadrant
-        filter_front_left = np.logical_and(filter_front_left, np.abs(y_points - x_points) < 0.1)  # diag
-        # filter_front_left = np.logical_and((x_points > 0), (y_points > 0))  # front AND left quadrant
-        # filter_front_left = np.logical_and(filter_front_left, np.abs(y_points / x_points - 1) < 0.1)  # diag
-        filter_front_left = np.logical_and(filter_front_left, pixel_vals > 128)
-        indices = np.argwhere(filter_front_left).flatten()
+        
+        # Get front-left (x > 0, y > 0)
+        filter_fl = np.logical_and(x_points > 0.1, y_points > 0.1)
+        filter_fl = np.logical_and(filter_fl, pixel_vals > 128)
+        indices = np.argwhere(filter_fl).flatten()
         self.x_front_left = np.mean(x_points[indices])
         self.y_front_left = np.mean(y_points[indices])
 
-        # front right
-
-        # filter_front_right = np.logical_and((y_points>-0.1), (y_points<0.1))
-        # filter_front_right = np.logical_and(filter_front_right, x_points > 0) # front
-        # filter_front_right = np.logical_and(filter_front_right, y_points < 0) # right
-        # filter_front_right = np.logical_and(filter_front_right, pixel_vals > 128)
-        # indices = np.argwhere(filter_front_right).flatten()
-
-        # self.x_front_right = np.mean(x_points[indices])
-        # self.y_front_right = np.mean(y_points[indices])
-
-        filter_front_right = np.logical_and((x_points > 0), (y_points < 0))  # front AND right
-        filter_front_right = np.logical_and(filter_front_right, np.abs(y_points + x_points) < 0.1)
-        # filter_front_right = np.logical_and((x_points > 0), (y_points < 0))  # front AND right
-        # filter_front_right = np.logical_and(filter_front_right, np.abs(y_points / x_points + 1) < 0.1) 
-        filter_front_right = np.logical_and(filter_front_right, pixel_vals > 128)
-        indices = np.argwhere(filter_front_right).flatten()
-
+        # Get front-right (x > 0, y < 0)
+        filter_fr = np.logical_and(x_points > 0.1, y_points < -0.1)
+        filter_fr = np.logical_and(filter_fr, pixel_vals > 128)
+        indices = np.argwhere(filter_fr).flatten()
         self.x_front_right = np.mean(x_points[indices])
         self.y_front_right = np.mean(y_points[indices])
 
-        # rear left
-
-        # filter_rear_left = np.logical_and((y_points>-0.1), (y_points<0.1))
-        # filter_rear_left = np.logical_and(filter_rear_left, x_points < 0) # rear
-        # filter_rear_left = np.logical_and(filter_rear_left, y_points > 0) # left
-        # filter_rear_left = np.logical_and(filter_rear_left, pixel_vals > 128)
-        # indices = np.argwhere(filter_rear_left).flatten()
-
-        # self.x_rear_left = np.mean(x_points[indices])
-        # self.y_rear_left = np.mean(y_points[indices])
-
-        filter_rear_left = np.logical_and((x_points < 0), (y_points > 0))  # rear AND left
-        filter_rear_left = np.logical_and(filter_rear_left, np.abs(y_points + x_points) < 0.1)
-        # filter_rear_left = np.logical_and((x_points < 0), (y_points > 0))  # rear AND left
-        # filter_rear_left = np.logical_and(filter_rear_left, np.abs(y_points / x_points + 1) < 0.1) 
-        filter_rear_left = np.logical_and(filter_rear_left, pixel_vals > 128)
-        indices = np.argwhere(filter_rear_left).flatten()
-
+        # Get rear-left (x < 0, y > 0)
+        filter_rl = np.logical_and(x_points < -0.1, y_points > 0.1)
+        filter_rl = np.logical_and(filter_rl, pixel_vals > 128)
+        indices = np.argwhere(filter_rl).flatten()
         self.x_rear_left = np.mean(x_points[indices])
         self.y_rear_left = np.mean(y_points[indices])
 
-
-        # rear right
-
-        # filter_rear_right = np.logical_and((y_points>-0.1), (y_points<0.1))
-        # filter_rear_right = np.logical_and(filter_rear_right, x_points < 0) # rear
-        # filter_rear_right = np.logical_and(filter_rear_right, y_points < 0) # right
-        # filter_rear_right = np.logical_and(filter_rear_right, pixel_vals > 128)
-        # indices = np.argwhere(filter_rear_right).flatten()
-
-        # self.x_rear_right = np.mean(x_points[indices])
-        # self.y_rear_right = np.mean(y_points[indices])
-        filter_rear_right = np.logical_and((x_points < 0), (y_points < 0))  # rear AND right
-        filter_rear_right = np.logical_and(filter_rear_right, np.abs(y_points - x_points) < 0.1)
-        # filter_rear_right = np.logical_and((x_points < 0), (y_points < 0))  # rear AND right
-        # filter_rear_right = np.logical_and(filter_rear_right, np.abs(y_points / x_points - 1) < 0.1)
-        filter_rear_right = np.logical_and(filter_rear_right, pixel_vals > 128)
-        indices = np.argwhere(filter_rear_right).flatten()
-
+        # Get rear-right (x < 0, y < 0)
+        filter_rr = np.logical_and(x_points < -0.1, y_points < -0.1)
+        filter_rr = np.logical_and(filter_rr, pixel_vals > 128)
+        indices = np.argwhere(filter_rr).flatten()
         self.x_rear_right = np.mean(x_points[indices])
         self.y_rear_right = np.mean(y_points[indices])
+
+        
         
         ###############
 
@@ -316,8 +256,6 @@ class LidarProcessing:
         cv2.circle(img, center, 5, (0,255,0), -1, 8, 0)
         if not np.isnan(self.x_rear_right) and not np.isnan(self.y_rear_right):
             cv2.arrowedLine(img, (self.vehicle_x,self.vehicle_y), center, (255,0,0))
-        
-        
         birds_eye_im = self.cvBridge.cv2_to_imgmsg(img, 'bgr8')
 
         self.birdsEyeViewPub.publish(birds_eye_im)
@@ -367,10 +305,8 @@ class LidarProcessing:
             rear_right = self.sensor_limit
         
         # 4 Directions
-        # return [front*100, right*100, rear*100, left*100]
+        #return [front*100, right*100, rear*100, left*100]
         
         # 8 Directions
         return [front*100, right*100, rear*100, left*100, front_left * 100, front_right * 100, rear_left*100, rear_right*100]
 
-
-        
