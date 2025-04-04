@@ -146,7 +146,9 @@ class particleFilter:
         for idx in indexes:
             p = self.particles[idx]
             new_p = Particle(x=p.x, y=p.y, heading=p.heading, maze=self.world,
-                            sensor_limit=self.sensor_limit, noisy=True)
+                            sensor_limit=self.sensor_limit, noisy=True
+                            , weight = p.weight
+                            )
             particles_new.append(new_p)
 
         self.particles = particles_new
