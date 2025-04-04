@@ -107,7 +107,7 @@ class particleFilter:
             readings_particle = particle.read_sensor() # this reads 4 or 8 directions
             # robot reads 4, particle reads 8. why particle read 8
             # readings robot is first cuz it's x1 in weight_gaussian_kernel. either gauss or uniform
-            particle.weight = self.weight_gaussian_kernel(readings_robot, readings_particle)
+            particle.weight = self.weight_gaussian_kernel(readings_robot, readings_particle, std = 2 * self.sensor_limit)
             total_weight += particle.weight
         
         # normalize weight
@@ -274,7 +274,7 @@ class particleFilter:
                 readings_robot = self.bob.read_sensor() # get the actual readings, alr converted to the gazebo?
                 self.updateWeight(readings_robot)  # Update particle weights
                 # self.resampleParticle()  # Resample particles, this updates self.particles in place alr
-                self.resampleParticleSystematic()
+                self.resampleParticle()
 
             self.world.show_robot(self.bob)
             self.world.show_particles(self.particles, show_frequency = 10)
